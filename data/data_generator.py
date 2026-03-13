@@ -2,15 +2,13 @@ import os
 import json
 import time
 import random
-import re # Remember to import re
+import re
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-# --- NEW IMPORTS ---
 from google import genai
 from google.genai import types
 
-# --- 1. CONFIGURATION ---
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
@@ -45,10 +43,8 @@ generate_config = types.GenerateContentConfig(
     ]
 )
 
-# Model Name
-MODEL_NAME = "gemini-2.5-flash" # Hoặc gemini-1.5-flash
+MODEL_NAME = "gemini-2.5-flash"
 
-# Define valid labels for validation
 VALID_LABELS = {
     "O", 
     "B-ROLE", "I-ROLE", 
