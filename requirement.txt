@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+torch
+transformers
+pytorch-crf
+python-dotenv
+tqdm
+pandas
+numpy
+evaluate
+seqeval
+safetensors

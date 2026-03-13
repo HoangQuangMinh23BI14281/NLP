@@ -1,0 +1,36 @@
+# NER Project Gitignore
+
+# Models and Weights (Heavy files)
+*.bin
+*.pth
+*.safetensors
+*.h5
+*.ckpt
+*.pt
+training_args.bin
+
+# Python environment and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+.env
+
+# Data and results (if large)
+NLP/result/
+data/
+data_analyze/
+!NLP/demo/backend/**/config.json
+!NLP/demo/backend/**/tokenizer.json
+!NLP/demo/backend/**/vocab.txt
+!NLP/demo/backend/**/tokenizer_config.json
+!NLP/demo/backend/**/special_tokens_map.json
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
