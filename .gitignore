@@ -19,10 +19,12 @@ venv/
 ENV/
 .env
 
-# Data and results (if large)
-NLP/result/
-data/
-data_analyze/
+# Data and results are ALWAYS included (even if large)
+!data/**
+!result/**
+!data_analyze/**
+
+# Models metadata (explicitly include)
 !NLP/demo/backend/**/config.json
 !NLP/demo/backend/**/tokenizer.json
 !NLP/demo/backend/**/vocab.txt
