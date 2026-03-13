@@ -1,0 +1,98 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{float}
+\geometry{a4paper, top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+% import more libraries
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{placeins}
+\usepackage{graphicx}
+
+\usepackage{tikz}
+\usetikzlibrary{calc} 
+\usetikzlibrary{arrows.meta, positioning}
+\usepackage{url}
+\usepackage{hyperref}
+
+\usepackage{amsmath}
+\usepackage{amssymb} 
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}                 % clear header/footer
+\fancyfoot[C]{\thepage}    % page number center footer
+
+% --- ONLY section updates the header ---
+\renewcommand{\sectionmark}[1]{%
+	\markright{\thesection\ #1}
+}
+
+% --- disable subsection from touching the header ---
+\renewcommand{\subsectionmark}[1]{}
+
+% --- header layout ---
+\fancyhead[L]{GROUP 6}
+\fancyhead[R]{\rightmark}
+
+\begin{document}
+
+% ======================= COVER PAGE ==========================
+\thispagestyle{empty}
+
+% Draw the border frame
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[line width=0.8pt]
+  ($(current page.north west) + (2cm,-2cm)$)
+  rectangle
+  ($(current page.south east) + (-2cm,2cm)$);
+\end{tikzpicture}
+
+\begin{center}
+
+  {\large \textbf{UNIVERSITY OF SCIENCE AND TECHNOLOGY OF HANOI}}\\[4pt]
+  {\normalsize \textbf{DEPARTMENT OF INFORMATION AND COMMUNICATION TECHNOLOGY}}\\[3cm]
+
+  \includegraphics[width=6cm]{images/logo.png}\\[2cm]
+
+  {\LARGE \textbf{NLP GROUP PROJECT}}\\[1cm]
+  {\Large \textbf{Group 6}}\\[0.5cm]
+  {\Large \textbf{Information extraction from JD\\ (skill/salary/address)}}\\[2cm]
+
+  {\large \textit{Members:}}\\[4pt]
+  {\large Hoang Quang Minh - 23BI14281\\
+  Pham Nguyen Khoi - 23BI14228\\
+  Nguyen Minh Tuan - 23BI14441\\
+  Nguyen Quang Minh - 23BI14288\\
+  Hoang Quang Minh - 23BI14281}\\
+  Nguyen Trong Bach - 23BI14057\\[3cm]
+  
+
+  {\large Hanoi, \today}
+
+\end{center}
+
+\clearpage
+
+\tableofcontents
+
+
+\clearpage
+
+\input{sections/Introduction.tex}
+\input{sections/Data.tex}
+\input{sections/Methodology.tex}
+\input{sections/Experiment_Result.tex}
+\input{sections/Conclusion.tex}
+\clearpage
+\input{sections/References.tex}
+\clearpage
+\input{sections/Appendix.tex}
+
+\end{document}
