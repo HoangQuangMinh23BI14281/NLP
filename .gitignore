@@ -1,13 +1,7 @@
 # NER Project Gitignore
 
-# Models and Weights (Heavy files)
-*.bin
-*.pth
-*.safetensors
-*.h5
-*.ckpt
-*.pt
-training_args.bin
+# Models and Weights (Now tracked by Git LFS)
+# *.bin, *.pth, *.safetensors are tracked in .gitattributes
 
 # Python environment and cache
 __pycache__/
