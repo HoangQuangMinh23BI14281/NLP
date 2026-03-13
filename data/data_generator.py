@@ -370,7 +370,7 @@ def generate_with_retry(prompt):
                 time.sleep(base_wait)
         
         if "429" in error_msg or "ResourceExhausted" in error_msg:
-            continu
+            continue
         else:
             return None
 
