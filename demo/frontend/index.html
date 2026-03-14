@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NLP NER Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="page-bg"></div>
+    <main class="container">
+        <header class="hero">
+            <p class="badge">NLP Demo</p>
+            <h1>IT Job Description NER</h1>
+            <p class="subtitle">Paste free text and extract ROLE, SKILL, LOC, EXP, and SALARY entities.</p>
+        </header>
+
+        <section class="card panel">
+            <h2>Input Text</h2>
+            <label class="field-wrap" for="input-text">Job Description or Candidate Text</label>
+            <textarea id="input-text" rows="8" placeholder="We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month."></textarea>
+            <div class="actions">
+                <button id="analyze-btn" type="button">Analyze NER</button>
+            </div>
+            <p id="status" class="status hidden"></p>
+        </section>
+
+        <section id="result-card" class="card panel hidden">
+            <h2>Extraction Result</h2>
+
+            <div id="missing-box" class="missing-box hidden">
+                <h3>Add More Information</h3>
+                <p id="missing-text"></p>
+                <div id="missing-list" class="missing-list"></div>
+            </div>
+
+            <h3>Entities</h3>
+            <div id="entity-list" class="entity-list"></div>
+
+            <h3>Token Preview</h3>
+            <div class="token-table-wrap">
+                <table class="token-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Token</th>
+                            <th>Tag</th>
+                        </tr>
+                    </thead>
+                    <tbody id="token-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card todo-panel">
+            <h3>TODO / Missing In Current demo/api</h3>
+            <ul>
+                <li>Matching endpoint exists at <code>/match</code>, but UI still displays NER-only view.</li>
+                <li>PDF upload and parser endpoint are not implemented yet.</li>
+                <li>Entity confidence is estimated from token logits; CRF-calibrated confidence can be improved later.</li>
+            </ul>
+        </section>
+    </main>
+
+    <div id="loader" class="loader hidden">
+        <div class="spinner"></div>
+        <p>Running NER model...</p>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
