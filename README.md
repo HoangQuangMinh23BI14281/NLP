@@ -92,7 +92,7 @@ The demo application is located in [demo](demo) and consists of:
 
 If the model folder is not already available locally, download it from Google Drive:
 
-- Model download: `https://drive.google.com/drive/folders/1epqMNAe6Fm7BydWjXoYwZMWt0Q1Fpj-W?fbclid=IwY2xjawQhtfJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA80Mzc2MjYzMTY5NzM3ODgAAR7aWNwopxl5bDcUDygLd6woaSzLo48NxOzAA-lczr8Ub0FuimVqx4s2n2Schg_aem_Lno5FVBkGAtBrpqrveCavA`
+- Model download: [Google Drive link](https://drive.google.com/drive/folders/1epqMNAe6Fm7BydWjXoYwZMWt0Q1Fpj-W?fbclid=IwY2xjawQhtfJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA80Mzc2MjYzMTY5NzM3ODgAAR7aWNwopxl5bDcUDygLd6woaSzLo48NxOzAA-lczr8Ub0FuimVqx4s2n2Schg_aem_Lno5FVBkGAtBrpqrveCavA)
 
 After downloading, place the model folder inside [demo/backend](demo/backend).
 
