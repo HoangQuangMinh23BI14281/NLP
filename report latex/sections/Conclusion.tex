@@ -1,4 +1,11 @@
 \section{Conclusion}
+
 \subsection{Summary}
+This project presents a comprehensive study of Transformer-based Named Entity Recognition (NER) for IT recruitment job descriptions. We construct a domain-specific dataset of 11{,}001 synthetic samples with token-level IOB annotations for five practical entity types: \textbf{ROLE}, \textbf{SKILL}, \textbf{LOC}, \textbf{EXP}, and \textbf{SALARY}. To ensure training quality, we apply a two-stage preprocessing pipeline including generation validation and tokenizer-aware label alignment for subword tokenization.
+
+We evaluate three pre-trained Transformer backbones---\textbf{BERT-base}, \textbf{RoBERTa-base}, and \textbf{DistilBERT-base}---under six optimization settings: Base CE, Focal Loss, Dice Loss, CE + Dice, CRF, and CRF + Focal Loss. Across all architectures, the experimental results consistently show that \textbf{CE + Dice Loss} is the most effective objective. The overall best model is \textbf{RoBERTa-base + CE + Dice}, achieving an F1-score of \textbf{0.9223} with strong precision-recall balance and high token-level accuracy. BERT-base + CE + Dice follows closely (F1 = 0.9202), while DistilBERT-base + CE + Dice remains highly competitive (F1 = 0.9109) with substantially fewer parameters.
+
+These findings demonstrate that hybrid loss design can outperform standalone objectives, and that model selection should consider both predictive quality and deployment constraints (latency, memory, and compute budget).
+
 \subsection{Limitations}
 \subsection{Future Work}
