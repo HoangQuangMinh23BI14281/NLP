@@ -1,5 +1,72 @@
 \section{Data Collection \& Preparation}
-\subsection{Data Collection}
-\subsection{Data Preprocessing}
+
+\subsection{Data Generation}
+Due to the scarcity of specialized, diverse, and publicly available Named Entity Recognition (NER) datasets tailored for the IT recruitment domain, we opt to synthesize our own dataset using a Large Language Model (LLM). This approach allows us to tightly control the domain coverage, entity distribution, and writing styles. We utilize the \texttt{gemini-2.5-flash} model via the Google GenAI API to generate the dataset.
+
+To ensure the dataset reflects the high variability of real-world job descriptions, we define a generation matrix comprising 21 distinct IT domains (e.g., Modern Web Fullstack, Cloud \& DevOps, Blockchain \& Web3, Embedded \& IoT) and 20 specific writing styles. These styles range from formal corporate tones to highly informal, noisy formats such as "Urgent Headhunter", "Messy/Casual" (containing abbreviations, grammatical errors, and typos), and "Social Media Post". 
+
+The generation prompt enforces a strict sequence length distribution: 20\% short headlines (e.g., "Senior Java Dev - \$120k - Remote"), 50\% medium-length standard requirements, and 30\% long, complex paragraphs. By combining dense technical context with adversarial noise (such as mentioning hardware perks like "MacBook Pro M1" which the model must learn to ignore and not classify as a SKILL), we ensure the resulting dataset is robust and challenging.
+
 \subsection{Named Entity Definition}
+The dataset is annotated at the token level using the standard IOB (Inside, Outside, Beginning) format. We define five core entity types that capture vital recruitment information:
+\begin{itemize}
+    \item \textbf{ROLE}: Job titles and positions, including seniority levels (e.g., \textit{Senior Backend Engineer}, \textit{DevOps Lead}, \textit{Intern}).
+    \item \textbf{SKILL}: Technical skills, programming languages, frameworks, and tools (e.g., \textit{Java}, \textit{AWS}, \textit{CI/CD}, \textit{React}).
+    \item \textbf{LOC}: Geographical locations or work modes ranging from specific cities to flexible arrangements (e.g., \textit{New York}, \textit{Berlin}, \textit{Remote}, \textit{Hybrid}).
+    \item \textbf{EXP}: Years of experience or experience-level requirements (e.g., \textit{5 years}, \textit{3+ yrs}, \textit{Junior level}).
+    \item \textbf{SALARY}: Monetary compensation, spanning exact figures and ranges (e.g., \textit{\$120k}, \textit{2000 USD}, \textit{competitive salary}).
+\end{itemize}
+Tokens that do not belong to any of these categories are labeled as \textbf{O} (Outside). This combination of 5 entity types and the IOB tagging scheme results in a total of 11 unique sequence labels defined in our dataset: \texttt{B-EXP}, \texttt{B-LOC}, \texttt{B-ROLE}, \texttt{B-SALARY}, \texttt{B-SKILL}, \texttt{I-EXP}, \texttt{I-LOC}, \texttt{I-ROLE}, \texttt{I-SALARY}, \texttt{I-SKILL}, and \texttt{O}.
+
 \subsection{Dataset Statistics}
+After generating the raw data across multiple API calls, we aggregate a total of 11,001 valid examples. Exploratory Data Analysis (EDA) reveals the natural occurrence and distribution of the predefined entities within the synthesized job descriptions. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/seq_length_dist.png}
+    \caption{Distribution of sequence lengths (number of tokens per sample).}
+    \label{fig:seq_length_dist}
+\end{figure}
+
+The \textbf{SKILL} entity is by far the most dominant, reflecting the technical focus of IT job postings. This is followed by \textbf{ROLE} and \textbf{LOC}. \textbf{EXP} and \textbf{SALARY} are less frequent. Table \ref{tab:entity_distribution} details the precise counts of each entity type found within the dataset.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{l c}
+        \hline
+        \textbf{Entity Type} & \textbf{Count} \\
+        \hline
+        SKILL & 11,523 \\
+        ROLE & 6,463 \\
+        LOC & 4,035 \\
+        EXP & 2,980 \\
+        SALARY & 2,525 \\
+        \hline
+    \end{tabular}
+    \caption{Distribution of entity types in the generated dataset.}
+    \label{tab:entity_distribution}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/entity_count.png}
+    \caption{Frequency distribution of the five predefined entity types.}
+    \label{fig:entity_count}
+\end{figure}
+
+This frequency distribution highlights a natural class imbalance inherent in recruitment text, where sentences often list numerous technical skills but mention the job role or salary only once. This inherent imbalance necessitates the use of specialized loss functions, such as Focal Loss and Dice Loss, during the model training phase to prevent the model from becoming biased toward the majority classes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/entity_lengths.png}
+    \caption{Distribution of entity span lengths (number of tokens per entity type).}
+    \label{fig:entity_lengths}
+\end{figure}
+
+
+\subsection{Data Preprocessing}
+To prepare the generated JSONL data for transformer-based token classification, we implement a rigorous two-stage preprocessing pipeline.
+
+\paragraph{Stage 1: Generation Validation.} We first validate the structural integrity of the synthesized data. This involves verifying that the length of the \texttt{tokens} array perfectly matches the length of the \texttt{ner\_tags} array. We enforce strict punctuation and currency splitting rules (e.g., splitting \textit{"\$150k"} into \texttt{["\$", "150", "k"]}) to ensure clean token transitions. We also validate the logical progression of the IOB tags, ensuring that an \texttt{I-TAG} sequence is always preceded by either a \texttt{B-TAG} or another \texttt{I-TAG} of the exact same entity type. Any generated sample violating these constraints is discarded automatically.
+
+\paragraph{Stage 2: Model Alignment.} Since modern Transformer architectures (e.g., BERT, RoBERTa) rely on subword tokenizers (like WordPiece or Byte-Pair Encoding), a single word from our dataset might be split into multiple subwords. To align our word-level tags with the subword tokens, we leverage the \texttt{is\_split\_into\_words=True} parameter in the Hugging Face \texttt{AutoTokenizer}. When a word is split into multiple pieces by the tokenizer, we assign the true NER label to the first subword. All subsequent subwords belonging to that original word are masked by assigning them a special ignore index (\texttt{-100}). This guarantees that the loss function only calculates the penalty on the first subword during training, preventing the model from disproportionately weighting and optimizing heavily fragmented words.

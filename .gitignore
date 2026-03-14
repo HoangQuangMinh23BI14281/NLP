@@ -30,3 +30,4 @@ ENV/
 .idea/
 .DS_Store
 Thumbs.db
+result/roberta/final_CRF/pytorch_model.bin

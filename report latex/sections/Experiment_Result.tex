@@ -61,8 +61,6 @@ We evaluate all models using the \texttt{seqeval} metric, which computes entity-
 \end{itemize}
 Metrics are computed on the test set after each epoch, and we report the final epoch results.
 
-
-
 \subsection{BERT Results}
 
 \subsubsection{Model Configuration.}
@@ -108,7 +106,7 @@ We train BERT (bert-base-cased) for NER token classification. BERT-base is a rob
     \label{tab:bert_focal}
 \end{table}
 
-\noindent Focal Loss yields the lowest F1 (0.8502), dropping 0.0670 points below the baseline. Despite achieving the lowest absolute validation loss (0.0384), it suffers severe precision degradation (0.8120). This paradox suggests that aggressively penalizing 'easy' background tokens disrupts the model's discriminative threshold, leading to massive false positive predictions.
+\noindent Focal Loss yields the lowest F1 (0.8502), dropping 0.0670 points below the baseline. Despite achieving the lowest absolute validation loss (0.0384), it suffers severe precision degradation (0.8120). This paradox suggests that aggressively penalizing easy background tokens disrupts the model's discriminative threshold, leading to massive false positive predictions.
 
 \subsubsection{Dice Loss.}
 
@@ -231,7 +229,218 @@ We train BERT (bert-base-cased) for NER token classification. BERT-base is a rob
 \noindent \textbf{Convergence and Stability.} All top variants demonstrate rapid monotonic improvement, effectively converging by epoch 3 or 4. CE + Dice shows a massive initial leap from epoch 1 to 2, indicating highly synergistic learning. Paradoxically, the worst-performing Focal Loss maintains the lowest absolute validation loss throughout training, highlighting a dangerous disconnect between raw log-loss minimization and actual discrete F1 metric maximization.
 
 \noindent \textbf{Conclusion.} BERT-base fine-tuned with the hybrid \textbf{CE + Dice Loss} represents the absolute optimal configuration, achieving $F1 = 0.9202$. The tight cluster of top results underscores that the baseline CE is already highly effective. Complex sequence decoding (CRF) yields negligible empirical gains, and Focal Loss actively harms extraction precision. For dense Transformer architectures on properly formatted NER datasets, combining stable token-wise probabilities (CE) with global boundary optimization (Dice) yields the most robust, balanced, and state-of-the-art results.
-\subsection{RoBERTa}
+
+\subsection{RoBERTa Results}
+
+\subsubsection{Model Configuration.}
+We train RoBERTa (\texttt{roberta-base}) for NER token classification.
+RoBERTa-base is a strong Transformer encoder with 12 layers, 768 hidden dimensions, and approximately 125M parameters.
+Compared with BERT, RoBERTa is trained with improved pre-training strategies and larger-scale data, making it highly competitive for token-level sequence labeling tasks.
+Its byte-level BPE tokenizer is configured with appropriate word alignment to preserve the original token labels during preprocessing.
+
+\subsubsection{Baseline: CE Loss.}
+
+\begin{table}[H]
+\centering
+\caption{RoBERTa with Base Cross-Entropy Loss (5 epochs).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss} & \textbf{F1} & \textbf{Precision} / \textbf{Recall} / \textbf{Acc.} \\
+\hline
+1 & 0.1956 & 0.0817 & 0.9069 & 0.9001 / 0.9138 / 0.9731 \\
+2 & 0.0723 & 0.0770 & 0.9113 & 0.9113 / 0.9113 / 0.9744 \\
+3 & 0.0572 & 0.0736 & 0.9160 & 0.9104 / 0.9217 / 0.9758 \\
+4 & 0.0492 & 0.0756 & 0.9197 & 0.9162 / 0.9233 / 0.9767 \\
+5 & 0.0396 & 0.0773 & 0.9185 & 0.9157 / 0.9212 / 0.9769 \\
+\hline
+\end{tabular}
+\label{tab:roberta_base_ce}
+\end{table}
+
+The baseline RoBERTa model achieves a strong final \textbf{F1-score of 0.9185}, already surpassing the corresponding DistilBERT baseline and slightly exceeding the BERT baseline.
+Training loss decreases consistently over all five epochs, and validation loss remains low and stable, indicating efficient convergence.
+Precision and recall are highly balanced ($P = 0.9157$, $R = 0.9212$), while token accuracy reaches \textbf{97.69\%}.
+These results confirm that RoBERTa provides a very strong foundation for the NER task.
+---
+
+\subsubsection{Focal Loss.}
+
+\begin{table}[H]
+\centering
+\caption{RoBERTa with Focal Loss ($\gamma = 2.0$, weighted by class frequency).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss} & \textbf{F1} & \textbf{Precision} / \textbf{Recall} / \textbf{Acc.} \\
+\hline
+1 & 0.1475 & 0.0427 & 0.8018 & 0.7427 / 0.8712 / 0.9379 \\
+2 & 0.0358 & 0.0418 & 0.8257 & 0.7807 / 0.8763 / 0.9519 \\
+3 & 0.0273 & 0.0398 & 0.8264 & 0.7846 / 0.8729 / 0.9492 \\
+4 & 0.0205 & 0.0400 & 0.8454 & 0.8067 / 0.8879 / 0.9576 \\
+5 & 0.0160 & 0.0419 & 0.8535 & 0.8176 / 0.8926 / 0.9600 \\
+\hline
+\end{tabular}
+\label{tab:roberta_focal}
+\end{table}
+
+Focal Loss achieves a final \textbf{F1-score of 0.8535}, which is the lowest among all RoBERTa variants.
+Although validation loss is numerically small, the model suffers a substantial drop in precision ($P = 0.8176$), while recall remains relatively high ($R = 0.8926$).
+This imbalance suggests that Focal Loss over-emphasizes hard examples and produces too many false positive entity predictions.
+Thus, as observed with BERT and DistilBERT, Focal Loss alone is not well-suited for this dataset.
+---
+
+\subsubsection{Dice Loss.}
+
+\begin{table}[H]
+\centering
+\caption{RoBERTa with Dice Loss ($\epsilon = 10^{-6}$).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss} & \textbf{F1} & \textbf{Precision} / \textbf{Recall} / \textbf{Acc.} \\
+\hline
+1 & 0.1799 & 0.0921 & 0.8884 & 0.8860 / 0.8909 / 0.9664 \\
+2 & 0.0912 & 0.0903 & 0.8972 & 0.9054 / 0.8893 / 0.9686 \\
+3 & 0.0838 & 0.0854 & 0.9032 & 0.9037 / 0.9027 / 0.9707 \\
+4 & 0.0756 & 0.0843 & 0.9084 & 0.9125 / 0.9043 / 0.9717 \\
+5 & 0.0761 & 0.0816 & 0.9090 & 0.9125 / 0.9055 / 0.9725 \\
+\hline
+\end{tabular}
+\label{tab:roberta_dice}
+\end{table}
+
+Dice Loss achieves a final \textbf{F1-score of 0.9090}, showing solid and stable performance throughout training.
+The model converges smoothly and maintains a well-balanced precision-recall profile ($P = 0.9125$, $R = 0.9055$).
+Compared with the CE baseline, however, standalone Dice Loss performs slightly worse, suggesting that F1-oriented optimization alone is not sufficient to outperform standard cross-entropy on this task.
+---
+
+\subsubsection{CE + Dice Loss.}
+
+\begin{table}[H]
+\centering
+\caption{RoBERTa with Combined CE + Dice Loss.}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss} & \textbf{F1} & \textbf{Precision} / \textbf{Recall} / \textbf{Acc.} \\
+\hline
+1 & 0.3989 & 0.1784 & 0.9091 & 0.9023 / 0.9161 / 0.9745 \\
+2 & 0.1683 & 0.1688 & 0.9166 & 0.9182 / 0.9151 / 0.9755 \\
+3 & 0.1422 & 0.1633 & 0.9192 & 0.9197 / 0.9187 / 0.9765 \\
+4 & 0.1238 & 0.1640 & 0.9218 & 0.9196 / 0.9241 / 0.9768 \\
+5 & 0.1103 & 0.1631 & 0.9223 & 0.9215 / 0.9231 / 0.9772 \\
+\hline
+\end{tabular}
+\label{tab:roberta_ce_dice}
+\end{table}
+
+The combined CE + Dice Loss achieves the \textbf{best overall performance} among all RoBERTa variants, with a final \textbf{F1-score of 0.9223}.
+This model also achieves the highest precision ($P = 0.9215$) while maintaining very strong recall ($R = 0.9231$).
+The combination of CE and Dice successfully integrates stable token-level optimization with F1-aware structural matching, resulting in the most balanced and robust model.
+---
+
+\subsubsection{CRF Layer.}
+
+\begin{table}[H]
+\centering
+\caption{RoBERTa + CRF (no focal loss).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss} & \textbf{F1} & \textbf{Precision} / \textbf{Recall} / \textbf{Acc.} \\
+\hline
+1 & 5.0027 & 1.8676 & 0.9027 & 0.8923 / 0.9135 / 0.9716 \\
+2 & 1.6522 & 1.7130 & 0.9116 & 0.9087 / 0.9145 / 0.9742 \\
+3 & 1.2982 & 1.6659 & 0.9147 & 0.9064 / 0.9231 / 0.9754 \\
+4 & 1.1609 & 1.6694 & 0.9201 & 0.9150 / 0.9253 / 0.9763 \\
+5 & 0.9152 & 1.6881 & 0.9220 & 0.9195 / 0.9246 / 0.9772 \\
+\hline
+\end{tabular}
+\label{tab:roberta_crf}
+\end{table}
+
+The RoBERTa + CRF model performs extremely well, achieving a final \textbf{F1-score of 0.9220}, which is only slightly below the CE + Dice variant.
+It records the highest recall ($R = 0.9246$) and the highest token accuracy (\textbf{97.72\%}) among all RoBERTa models.
+This demonstrates the strength of CRF-based sequence modeling, especially in enforcing valid label transitions and improving entity consistency.
+---
+
+\subsubsection{CRF + Focal Loss.}
+
+\begin{table}[H]
+\centering
+\caption{RoBERTa + CRF with Focal Loss ($\gamma = 2.0$).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss} & \textbf{F1} & \textbf{Precision} / \textbf{Recall} / \textbf{Acc.} \\
+\hline
+1 & 4.7636 & 1.6471 & 0.9058 & 0.8949 / 0.9170 / 0.9722 \\
+2 & 1.4418 & 1.4699 & 0.9103 & 0.9062 / 0.9145 / 0.9744 \\
+3 & 1.1087 & 1.4355 & 0.9137 & 0.9063 / 0.9212 / 0.9751 \\
+4 & 0.9837 & 1.4112 & 0.9186 & 0.9123 / 0.9249 / 0.9765 \\
+5 & 0.7423 & 1.4216 & 0.9203 & 0.9172 / 0.9234 / 0.9769 \\
+\hline
+\end{tabular}
+\label{tab:roberta_crf_focal}
+\end{table}
+
+The CRF + Focal Loss variant reaches a final \textbf{F1-score of 0.9203}, which is competitive but still below both CE + Dice and pure CRF.
+Its precision and recall remain strong ($P = 0.9172$, $R = 0.9234$), but the addition of Focal Loss does not produce further gains.
+This suggests that, as in the other architectures, Focal Loss introduces optimization pressure that is not fully compatible with the CRF objective.
+---
+
+\subsubsection{Summary: All RoBERTa Variants.}
+
+\begin{table}[htbp]
+\centering
+\caption{RoBERTa: Final F1-scores Across All Loss Functions (epoch 5).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Architecture} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall} & \textbf{Accuracy} \\
+\hline
+CE + Dice Loss & \textbf{0.9223} & \textbf{0.9215} & 0.9231 & 0.9772 \\
+CRF & 0.9220 & 0.9195 & \textbf{0.9246} & \textbf{0.9772} \\
+CRF + Focal Loss & 0.9203 & 0.9172 & 0.9234 & 0.9769 \\
+Base CE & 0.9185 & 0.9157 & 0.9212 & 0.9769 \\
+Dice Loss & 0.9090 & 0.9125 & 0.9055 & 0.9725 \\
+Focal Loss & 0.8535 & 0.8176 & 0.8926 & 0.9600 \\
+\hline
+\end{tabular}
+\label{tab:roberta_summary}
+\end{table}
+
+\paragraph{Overall Performance Ranking.}
+The six RoBERTa variants show a clear ranking pattern, with \textbf{CE + Dice Loss emerging as the best-performing configuration} at $F1 = 0.9223$.
+The performance gap between the best and worst variant is substantial: $0.9223 - 0.8535 = 0.0688$ (6.88 percentage points), confirming again that loss function selection strongly affects the final extraction quality.
+
+The top four variants (CE + Dice, CRF, CRF + Focal Loss, and Base CE) form a very tight performance cluster, all achieving $F1 \geq 0.9185$.
+This indicates that RoBERTa provides highly expressive contextual representations, leaving only limited room for improvement through additional sequence modeling or specialized objectives.
+Among them, CE + Dice achieves the best balance, while CRF reaches the best recall and accuracy.
+
+By contrast, \textbf{Focal Loss} performs much worse than all other RoBERTa variants.
+Its final F1-score of 0.8535 is nearly 7 points lower than the best configuration, demonstrating that hard-example emphasis is again detrimental rather than helpful for this NER setting.
+Standalone Dice Loss performs reasonably well ($F1 = 0.9090$), but it also remains below the stronger CE-based hybrids.
+
+\paragraph{Precision-Recall Trade-offs.}
+The precision-recall statistics reveal meaningful behavioral differences:
+
+\begin{itemize}
+\item \textbf{CE + Dice Loss} achieves the best overall precision-recall balance ($P = 0.9215$, $R = 0.9231$), producing the highest F1-score.
+\item \textbf{CRF} slightly favors recall ($R = 0.9246$), which helps it match the best token accuracy and nearly match the best F1-score.
+\item \textbf{Base CE} maintains a stable and balanced profile, confirming that standard cross-entropy is already highly effective with RoBERTa.
+\item \textbf{Dice Loss alone} slightly favors precision over recall ($P = 0.9125$, $R = 0.9055$), suggesting more conservative entity predictions.
+\item \textbf{Focal Loss} again shows a severe precision drop ($P = 0.8176$) while recall remains relatively high, indicating over-prediction of positive labels and excessive false positives.
+\end{itemize}
+
+\paragraph{Convergence and Stability.}
+All strong RoBERTa variants converge quickly and smoothly, with most performance gains achieved by epoch 3 or 4.
+\textbf{CE + Dice Loss} shows consistent improvement across all epochs and reaches the highest final F1-score.
+\textbf{CRF} also converges stably, though its validation loss remains numerically larger due to the different scale of CRF negative log-likelihood; therefore, direct loss comparisons between CRF and non-CRF models should be interpreted with caution.
+
+As observed in the BERT and DistilBERT experiments, \textbf{Focal Loss} maintains relatively low numerical validation loss but yields the weakest entity-level F1-score.
+This again highlights that minimizing raw loss does not necessarily correspond to maximizing the seqeval metric.
+
+\paragraph{Conclusion.}
+RoBERTa fine-tuned with \textbf{CE + Dice Loss} is the strongest RoBERTa configuration, achieving $F1 = 0.9223$, precision $= 0.9215$, recall $= 0.9231$, and token accuracy $= 97.72\%$.
+RoBERTa + CRF is an extremely close second, with the best recall and matched best accuracy.
+These findings suggest that for RoBERTa, both hybrid token-level optimization (CE + Dice) and explicit sequence decoding (CRF) are highly effective, but CE + Dice provides the most balanced and reliable overall solution.
+As with the other backbones, Focal Loss alone remains the weakest choice.
+
 \subsection{DistilBERT results}
 
 \subsubsection{Model Configuration.}
@@ -384,6 +593,7 @@ However, the improvement over the baseline is limited, suggesting that the base 
 The CRF + Focal Loss variant achieves a final \textbf{F1-score of 0.9049}, slightly lower than the CRF-only model. 
 Although training loss decreases steadily, the combination of sequence-level CRF optimization and token-level Focal Loss does not improve performance. 
 The results suggest that the two objectives may introduce conflicting optimization signals, making this combination less effective for the task.
+
 \subsubsection{Summary: All DistilBERT Variants.}
 
 \begin{table}[htbp]
@@ -441,3 +651,15 @@ More sophisticated losses and decoding strategies contribute only marginal gains
 These findings suggest that the NER task at hand exhibits characteristics favorable to standard approaches: relatively balanced class distribution, clean label sequences, and sufficient model capacity in DistilBERT to capture linguistic patterns without special handling of imbalance or sequence constraints.
 
 \subsection{Model Comparison and Discussion}
+
+Across the three Transformer backbones, the overall ranking is consistent: hybrid \textbf{CE + Dice Loss} provides the best or near-best performance, standard \textbf{Base CE} remains a very strong baseline, \textbf{CRF} offers competitive sequence-level benefits, while \textbf{Focal Loss} consistently underperforms.
+
+Among all evaluated models, the best configuration is \textbf{RoBERTa + CE + Dice Loss}, which achieves the highest overall F1-score of \textbf{0.9223}. It is followed very closely by \textbf{RoBERTa + CRF} ($F1 = 0.9220$) and \textbf{BERT + CE + Dice Loss} ($F1 = 0.9202$). DistilBERT, although lighter and faster, remains competitive, with its best variant (\textbf{CE + Dice Loss}) reaching \textbf{0.9109} F1.
+
+These results reveal a clear trade-off between model capacity and efficiency. RoBERTa delivers the best extraction quality, likely due to stronger pre-training and richer contextual representations. BERT remains highly competitive and stable across all strong objectives. DistilBERT sacrifices some performance in exchange for lower computational cost, but still maintains solid entity extraction ability.
+
+Another important finding is the repeated failure of \textbf{Focal Loss} across all backbones. Despite often producing low numerical validation loss, it consistently yields the weakest F1-score, mainly because it harms precision and increases false positive entity predictions. This suggests that the current dataset does not require aggressive hard-example reweighting, and that such reweighting can distort the balance between precision and recall.
+
+By contrast, the combination of \textbf{Cross-Entropy and Dice Loss} proves highly effective across all architectures. This hybrid objective leverages the stability of token-level supervision while directly encouraging overlap between predicted and gold entities, resulting in consistently strong and well-balanced performance.
+
+Overall, the experiments demonstrate that \textbf{RoBERTa + CE + Dice Loss} is the most effective model for our job-description information extraction task. At the same time, the narrow differences among the top-performing CE-based and CRF-based variants suggest that the dataset is relatively clean and structurally learnable, allowing modern Transformer encoders to perform strongly even without heavily specialized decoding strategies.
