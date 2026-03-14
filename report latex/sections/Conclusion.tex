@@ -21,3 +21,16 @@ Fourth, the work primarily emphasizes model-level metrics (F1, precision, recall
 Finally, the current study focuses on offline evaluation and does not include production-oriented measurements such as end-to-end latency under realistic traffic, drift monitoring, or human-in-the-loop correction workflows.
 
 \subsection{Future Work}
+Several promising directions can extend this work.
+
+\begin{itemize}
+    \item \textbf{Real-world data integration:} Combine synthetic data with manually annotated real job descriptions to improve robustness and reduce synthetic-to-real domain gap.
+    \item \textbf{Cross-domain generalization:} Evaluate transfer performance to non-IT recruitment domains and multilingual settings.
+    \item \textbf{Advanced modeling strategies:} Explore modern encoder families (e.g., DeBERTa variants), parameter-efficient fine-tuning (LoRA/adapters), and span-based or prompt-based NER formulations.
+    \item \textbf{Improved imbalance handling:} Investigate alternative reweighting and calibration strategies (e.g., class-balanced loss, label smoothing, threshold tuning) given the consistent weakness of Focal Loss in this setting.
+    \item \textbf{Data quality and active learning:} Introduce uncertainty-driven sampling and iterative annotation to prioritize informative examples and reduce labeling cost.
+    \item \textbf{Deployment and MLOps evaluation:} Benchmark inference speed, memory usage, and throughput across hardware targets; design monitoring pipelines for data drift and model degradation.
+    \item \textbf{Explainability and trust:} Add token-level attribution and error explanation tools to support recruiter-facing transparency and easier model debugging.
+\end{itemize}
+
+In conclusion, this work confirms that Transformer-based NER is highly effective for extracting structured recruitment information from unstructured job descriptions. Among the evaluated strategies, \textbf{RoBERTa-base with CE + Dice Loss} offers the best raw performance, while \textbf{DistilBERT with CE + Dice Loss} provides an attractive efficiency-performance trade-off for practical deployment.
