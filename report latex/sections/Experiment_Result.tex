@@ -76,7 +76,7 @@ prefix spacing (unlike RoBERTa).
 
 \subsubsection{Baseline: CE Loss.}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{DistilBERT with Base Cross-Entropy Loss (5 epochs).}
 \begin{tabular}{lcccc}
@@ -103,7 +103,7 @@ With 97.44\% token-level accuracy, this baseline provides a reliable foundation 
 
 \subsubsection{Focal Loss.}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{DistilBERT with Focal Loss ($\gamma = 2.0$, weighted by class frequency).}
 \begin{tabular}{lcccc}
@@ -130,7 +130,7 @@ The degraded performance suggests that class weighting alone is insufficient or 
 
 \subsubsection{Dice Loss.}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{DistilBERT with Dice Loss ($\epsilon = 10^{-6}$).}
 \begin{tabular}{lcccc}
@@ -158,7 +158,7 @@ While Dice Loss underperforms CE by 1.84\% F1, its superior balance and early co
 
 \subsubsection{CE + Dice Loss.}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{DistilBERT with Combined CE + Dice Loss.}
 \begin{tabular}{lcccc}
