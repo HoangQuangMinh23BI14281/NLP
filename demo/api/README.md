@@ -5,7 +5,7 @@ Run demo API:
 
 Endpoints:
 
-- Frontend UI: `http://127.0.0.1:8000`
+- Frontend UI: `http://127.0.0.1:8000/`
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - Health: `http://127.0.0.1:8000/health`
 - Labels metadata: `http://127.0.0.1:8000/labels`
