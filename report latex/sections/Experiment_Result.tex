@@ -716,3 +716,43 @@ These findings suggest that the NER task at hand exhibits characteristics favora
 \paragraph{Conclusion}
 
 RoBERTa + CE + Dice Loss is the best-performing configuration (F1 = 0.9223). However, minimal performance gaps among top variants suggest that architecture choice should prioritize deployment constraints (latency, memory, cost) over marginal accuracy differences.
+
+\section{Detailed Error Analysis of Specific Misclassifications}
+
+\begin{itemize}
+	\item \textbf{``Amazon'' misclassified as SKILL (High Confidence)}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/TestCase_1_Results.png}
+		\caption{Misclassification of "Amazon" as a SKILL due to local contextual list bias.}
+		\label{fig:error_amazon}
+	\end{figure}
+	\begin{description}
+		\item[Cause:] Contextual Override / List Bias.
+		\item[Explanation:] Transformer architectures excel at capturing structural patterns. In the phrase ``Go, Rust, and working at Amazon'', the model detects a sequential pattern: \texttt{[SKILL]}, \texttt{[SKILL]}, and \texttt{[X]}. During the training process, it learned a strong heuristic that the final item in a list of skills is predominantly a skill itself. The strength of this local contextual bias completely overrides the model's pre-trained knowledge (which would otherwise recognize Amazon as a Company/Organization).
+	\end{description}
+	
+	\item \textbf{``non-remote'' truncated to ``remote'' (Classified as LOC)}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/TestCase_2_Results.png}
+		\caption{Misclassification of "non-remote" as a remote location due to subword tokenization limits and negation handling.}
+		\label{fig:error_nonremote}
+	\end{figure}
+	\begin{description}
+		\item[Cause:] Tokenizer limitations and inability to capture Negation.
+		\item[Explanation:] Tokenizers frequently split hyphenated words (e.g., ``non'', ``-'', ``remote''). During inference, the model recognizes the highly familiar token ``remote'' and immediately triggers the \texttt{LOC} label, entirely ignoring the ``non-'' prefix. This represents a critical failure in real-world applications, as it completely reverses the semantic intent of the job description (altering the meaning from ``strictly on-site'' to ``remote work allowed'').
+	\end{description}
+	
+	\item \textbf{The isolated number ``150'' classified as LOC}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/TestCase_3_Results.png}
+		\caption{Misclassification of the isolated number "150" as a LOC due to missing currency markers.}
+		\label{fig:error_150}
+	\end{figure}
+	\begin{description}
+		\item[Cause:] Missing semantic indicators leading to model hallucination.
+		\item[Explanation:] When learning the \texttt{SALARY/COMPENSATION} entity boundaries, the model relies heavily on accompanying indicators such as \$, k, USD, or keywords like \textit{salary} and \textit{base}. When the number 150 (as in ``Base is 150'') appears in isolation, the model loses its semantic anchors. Instead of correctly defaulting to the \texttt{O} label (Outside/Not an entity), it forces an incorrect classification. This specific hallucination likely stems from a bias in the training data, which may contain numerical address formats (e.g., ``Highway 150'', ``Room 150'').
+	\end{description}
+\end{itemize}
