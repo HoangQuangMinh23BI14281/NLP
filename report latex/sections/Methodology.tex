@@ -1,30 +1,50 @@
 \section{Methodology}
-\subsection{Tokenization}
-\subsection{Model Architecture}
-\subsubsection{BERT Encoder}
 
-As the foundational representation learner in our framework, we employ the BERT architecture, which transforms an input sequence of $N$ subword tokens into a matrix of contextualized vectors $H \in \mathbb{R}^{N \times d}$, where the hidden dimension is $d = 768$. To capture bidirectional dependencies without sequential processing, BERT utilizes a Multi-Head Self-Attention (MHSA) mechanism. For each attention head, the input is projected into Query ($Q$), Key ($K$), and Value ($V$) matrices to compute context weights:
-$$ \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V $$
-Here, $Q$ and $K$ compute the alignment scores between different tokens via their dot product, while $V$ contains the actual representation features to be aggregated. The scaling factor $\sqrt{d_k}$, derived from the dimension of the key vectors $d_k$, is crucial for preventing the dot products from growing excessively large, thereby avoiding vanishing gradients within the softmax function. 
+This section details the technical approach employed to construct and train Named Entity Recognition (NER) models. The methodology focuses on the selection of foundational Transformer architectures, subword label alignment strategies, and the implementation of advanced loss functions and decoding layers to address class imbalance and sequence consistency.
 
-The concatenated outputs from multiple attention heads are then passed through a position-wise Feed-Forward Network (FFN) utilizing a Gaussian Error Linear Unit (GELU) activation. To ensure gradient stability across the encoder layers, each sub-layer incorporates a residual connection followed by Layer Normalization. This architectural choice allows the network to effectively learn residual mappings by adding the original input vector to the learned transformation before normalizing the output.
+\subsection{Foundational Transformer Models}
+To tackle the NER task, we leverage the power of the Transformer architecture by fine-tuning three pre-trained language models. Unlike traditional methods, these models utilize the self-attention mechanism to capture deep bidirectional context:
 
-To adapt this encoder for the Named Entity Recognition (NER) task, we extract the final hidden state vector $h_i \in \mathbb{R}^d$ for each token $i$. These token-level vectors are projected through a fully connected linear classification head to produce unnormalized logits $z_i \in \mathbb{R}^K$, where $K$ is the total number of predefined BIO tags. A standard softmax function is then applied to these logits to compute the conditional probability distribution over the label space:
-$$ P(y_i = k | X) = \frac{\exp(z_{i,k})}{\sum_{j=1}^{K} \exp(z_{i,j})} $$
-Within this distribution, $y_i$ indicates the predicted entity class for the $i$-th token given the entire input context $X$, and $z_{i,k}$ is the specific logit score for class $k$. The denominator normalizes the exponentials of all $K$ logits to ensure the final outputs sum to one, providing a valid confidence score for the token classification.
-\subsubsection{RoBERTa Encoder}
+\begin{itemize}
+    \item \textbf{BERT (Bidirectional Encoder Representations from Transformers):} The standard foundational model, pre-trained on massive corpora using the Masked Language Model (MLM) objective. It captures context from both sides of a token simultaneously.
+    \item \textbf{DistilBERT:} A distilled, "lighter" version of BERT designed to retain approximately 95\% of BERT's performance while being 40\% smaller and 60\% faster during inference.
+    \item \textbf{RoBERTa (Robustly Optimized BERT Pretraining Approach):} An enhanced variant that optimizes the training process by removing the Next Sentence Prediction (NSP) task and training on significantly larger datasets with larger mini-batches.
+\end{itemize}
 
-As a robustly optimized extension of the baseline architecture, we evaluate RoBERTa (Robustly Optimized BERT Pretraining Approach). While sharing the identical multi-layer bidirectional Transformer topology with a hidden dimension of $d = 768$, RoBERTa introduces critical modifications to the input processing and pre-training regime. It replaces the standard WordPiece tokenizer with a Byte-Level Byte-Pair Encoding (BPE) scheme, expanding the vocabulary space to approximately 50,000 tokens to better handle rare words and complex subword boundaries. Furthermore, it completely removes the Next Sentence Prediction (NSP) objective and employs dynamic masking, allowing the network to learn more generalized contextual representations. For the token classification task, the sequence of BPE tokens is processed through the 12 encoder layers to extract the final contextualized vector $h_i \in \mathbb{R}^d$ for each token. These vectors are then passed through a task-specific linear projection layer:
-$$ z_i = W h_i + b $$
-Here, $W \in \mathbb{R}^{K \times d}$ represents the learnable weight matrix, $b \in \mathbb{R}^K$ is the bias term, and $K$ denotes the total number of predefined BIO entity classes. To map these raw, unnormalized logits $z_i$ to a valid probability distribution, we apply the standard softmax function:
-$$ P(y_i = k | X) = \frac{\exp(z_{i,k})}{\sum_{j=1}^{K} \exp(z_{i,j})} $$
-This formulation ensures that the output probabilities across all $K$ classes sum to one. By applying this classification head over the dynamically masked BPE representations, the RoBERTa architecture aims to provide a more resilient entity boundary detection mechanism compared to the baseline model.
+\subsection{Tokenization and Label Alignment}
+Transformer models utilize subword tokenization algorithms (e.g., WordPiece or BPE). This introduces a misalignment: a single word may be split into multiple subwords (e.g., "Johnpeter" $\rightarrow$ ["John", "\#\#peter"]). We implement a strict label alignment strategy:
+\begin{enumerate}
+    \item \textbf{Extraction of \texttt{word\_ids}:} Mapping each subword back to its original word index.
+    \item \textbf{First-Subword Labeling:} Only the first subword of a fragmented word is assigned the original NER label (e.g., $B-PER$).
+    \item \textbf{Ignore Index (-100):} Subsequent subwords and special tokens (e.g., $[CLS]$, $[SEP]$) are assigned a label value of $-100$, which is ignored during loss calculation in PyTorch.
+\end{enumerate}
 
-\subsubsection{DistilBERT Encoder}
+\subsection{Loss Functions and Sequence Optimization}
+To mitigate class imbalance and enforce structural consistency, we evaluate the following loss functions and decoding algorithms:
 
-To address the computational overhead and latency inherent in large-scale Transformers, we integrate DistilBERT, a compressed variant of the BERT architecture engineered via knowledge distillation. DistilBERT halves the depth of the network from 12 to 6 Transformer layers and removes the token-type embeddings, effectively reducing the total parameter count by 40\% while retaining the vast majority of its language understanding capabilities. During its architectural creation, the student model (DistilBERT) learns to mimic the output distribution of the larger teacher model (BERT) by minimizing a distillation loss over the soft target probabilities:
-$$ \mathcal{L}_{distill} = - \sum_{i} t_i \log(s_i) $$
-In this distillation objective, $t_i$ represents the softmax probability estimated by the heavily-parameterized teacher network, and $s_i$ denotes the corresponding probability predicted by the compressed student network. Once this computationally efficient encoder is initialized, it is fine-tuned for our Named Entity Recognition task using the exact same topological approach as the base models. The 6-layer encoder outputs a dense sequence of hidden states $h_i \in \mathbb{R}^d$, which are fed into a linear classification head and normalized:
-$$ P(y_i = k | X) = \frac{\exp(z_{i,k})}{\sum_{j=1}^{K} \exp(z_{i,j})} $$
-By employing this specific architecture within our framework, we evaluate the critical trade-off between inference speed and extraction accuracy, analyzing whether mathematically distilled representations possess enough granularity to classify highly imbalanced entity tags effectively.
-\subsection{Evaluation Metrics}
+\subsubsection{Cross-Entropy Loss (CE)}
+The standard distribution-based loss measuring the difference between predicted and actual distributions:
+\begin{equation}
+L_{CE} = -\sum_{i=1}^{C} y_i \log(p_i)
+\end{equation}
+Where $C$ is the number of classes, $y_i$ is the binary indicator, and $p_i$ is the predicted probability.
+
+\subsubsection{Focal Loss}
+An enhancement of CE designed to handle class imbalance by adding a modulating factor $(1 - p_t)^\gamma$:
+\begin{equation}
+L_{Focal} = -(1 - p_t)^\gamma \log(p_t)
+\end{equation}
+This loss down-weights easy-to-classify examples (majority 'O' labels) and focuses on hard-to-learn entities.
+
+\subsubsection{Dice Loss}
+A region-based loss that maximizes the overlap between the prediction and the ground truth:
+\begin{equation}
+L_{Dice} = 1 - \frac{2 |X \cap Y| + \sigma}{|X| + |Y| + \sigma}
+\end{equation}
+Where $X$ is the set of predicted probabilities, $Y$ is the ground truth, and $\sigma$ is a smoothing factor.
+
+\subsubsection{Conditional Random Fields (CRF)}
+Unlike independent token predictions, the CRF layer models global sequence dependencies. It learns transition probabilities to ensure output sequences follow IOB2 naming conventions. The CRF layer minimizes the Negative Log-Likelihood (NLL):
+\begin{equation}
+L_{CRF} = -\log P(\mathbf{y}|\mathbf{h}) = -\log \left( \frac{\exp(\text{Score}(\mathbf{h}, \mathbf{y}))}{\sum_{\mathbf{y'} \in \mathbf{Y}} \exp(\text{Score}(\mathbf{h}, \mathbf{y'}))} \right)
+\end{equation}
