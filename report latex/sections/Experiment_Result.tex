@@ -655,22 +655,43 @@ These findings suggest that the NER task at hand exhibits characteristics favora
 
 \subsubsection{Cross-Architecture Performance Comparison}
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
-    \caption{Best Performing Variants: BERT, RoBERTa, and DistilBERT Comparison.}
-    \begin{tabular}{l c c c c c c}
+    \caption{All Model Variants Across All Architectures (Final Epoch Results).}
+    \small
+    \begin{tabular}{l l c c c c c}
         \hline
-        \textbf{Model} & \textbf{Loss Function} & \textbf{Parameters} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall} & \textbf{Accuracy} \\
+        \textbf{Architecture} & \textbf{Loss Function} & \textbf{Params} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall} & \textbf{Accuracy} \\
         \hline
-        RoBERTa-base & CE + Dice Loss & 125M & \textbf{0.9223} & \textbf{0.9215} & \textbf{0.9231} & \textbf{0.9772} \\
-        RoBERTa-base & CRF & 125M & 0.9220 & 0.9195 & 0.9246 & 0.9772 \\
-        BERT-base & CE + Dice Loss & 110M & 0.9202 & 0.9183 & 0.9222 & 0.9759 \\
+        \multicolumn{7}{c}{\textbf{BERT-base (110M Parameters)}} \\
+        \hline
+        BERT-base & CE + Dice Loss & 110M & \textbf{0.9202} & 0.9183 & 0.9222 & 0.9759 \\
         BERT-base & Base CE & 110M & 0.9172 & 0.9140 & 0.9204 & 0.9755 \\
-        DistilBERT-base & CE + Dice Loss & 66M & 0.9109 & 0.9066 & 0.9152 & 0.9746 \\
+        BERT-base & CRF & 110M & 0.9137 & 0.9082 & 0.9194 & 0.9747 \\
+        BERT-base & CRF + Focal Loss & 110M & 0.9118 & 0.9068 & 0.9169 & 0.9746 \\
+        BERT-base & Dice Loss & 110M & 0.8959 & 0.8983 & 0.8935 & 0.9686 \\
+        BERT-base & Focal Loss & 110M & 0.8502 & 0.8121 & 0.8922 & 0.9589 \\
+        \hline
+        \multicolumn{7}{c}{\textbf{RoBERTa-base (125M Parameters)}} \\
+        \hline
+        RoBERTa-base & CE + Dice Loss & 125M & \textbf{0.9223} & \textbf{0.9215} & 0.9231 & 0.9772 \\
+        RoBERTa-base & CRF & 125M & 0.9220 & 0.9195 & \textbf{0.9246} & \textbf{0.9772} \\
+        RoBERTa-base & CRF + Focal Loss & 125M & 0.9203 & 0.9172 & 0.9234 & 0.9769 \\
+        RoBERTa-base & Base CE & 125M & 0.9185 & 0.9157 & 0.9212 & 0.9769 \\
+        RoBERTa-base & Dice Loss & 125M & 0.9090 & 0.9125 & 0.9055 & 0.9725 \\
+        RoBERTa-base & Focal Loss & 125M & 0.8535 & 0.8176 & 0.8926 & 0.9600 \\
+        \hline
+        \multicolumn{7}{c}{\textbf{DistilBERT-base (66M Parameters)}} \\
+        \hline
+        DistilBERT-base & CE + Dice Loss & 66M & \textbf{0.9109} & \textbf{0.9066} & \textbf{0.9152} & \textbf{0.9746} \\
         DistilBERT-base & Base CE & 66M & 0.9095 & 0.9046 & 0.9145 & 0.9744 \\
+        DistilBERT-base & CRF & 66M & 0.9064 & 0.9003 & 0.9126 & 0.9738 \\
+        DistilBERT-base & CRF + Focal Loss & 66M & 0.9049 & 0.8982 & 0.9117 & 0.9736 \\
+        DistilBERT-base & Dice Loss & 66M & 0.8911 & 0.8937 & 0.8884 & 0.9685 \\
+        DistilBERT-base & Focal Loss & 66M & 0.8447 & 0.8063 & 0.8869 & 0.9572 \\
         \hline
     \end{tabular}
-    \label{tab:cross_model_comparison}
+    \label{tab:comprehensive_all_models}
 \end{table}
 
 \paragraph{Key Findings}
