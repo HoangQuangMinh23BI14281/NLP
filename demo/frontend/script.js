@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const resultCard = document.getElementById("result-card");
     const entityList = document.getElementById("entity-list");
-    const tokenTableBody = document.getElementById("token-table-body");
+    const matchGrid = document.getElementById("match-grid");
 
     const missingBox = document.getElementById("missing-box");
     const missingText = document.getElementById("missing-text");
@@ -51,33 +51,32 @@ document.addEventListener("DOMContentLoaded", () => {
         showLoader(true);
 
         try {
-            const response = await fetch("/predict", {
+            const response = await fetch("/match", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text }),
             });
 
             if (!response.ok) {
-                throw new Error("NER API error. Check model loading in backend logs.");
+                throw new Error("Matching API error. Check model loading in backend logs.");
             }
 
             const data = await response.json();
             renderResults(data);
-            showStatus("NER completed successfully.", false);
+            showStatus("Matching completed successfully.", false);
         } catch (error) {
-            showStatus(error.message || "Failed to run NER.", true);
+            showStatus(error.message || "Failed to run matching.", true);
         } finally {
             showLoader(false);
         }
     });
 
     function renderResults(data) {
-        const entities = Array.isArray(data.entities) ? data.entities : [];
-        const tokens = Array.isArray(data.tokens) ? data.tokens : [];
-        const tags = Array.isArray(data.tags) ? data.tags : [];
+        const entities = Array.isArray(data.candidate_entities) ? data.candidate_entities : [];
+        const matches = Array.isArray(data.matches) ? data.matches : [];
 
         entityList.innerHTML = "";
-        tokenTableBody.innerHTML = "";
+        matchGrid.innerHTML = "";
         missingList.innerHTML = "";
         missingBox.classList.add("hidden");
 
@@ -96,16 +95,46 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        const rowCount = Math.min(tokens.length, tags.length);
-        for (let i = 0; i < rowCount; i += 1) {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${i + 1}</td><td>${tokens[i]}</td><td>${tags[i]}</td>`;
-            tokenTableBody.appendChild(tr);
-        }
+        renderMatches(matches);
 
         renderMissingGuidance(entities);
         resultCard.classList.remove("hidden");
         resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderMatches(matches) {
+        if (matches.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "status warning";
+            empty.textContent = "No company matches available for the current input.";
+            matchGrid.appendChild(empty);
+            return;
+        }
+
+        matches.slice(0, 6).forEach((match) => {
+            const card = document.createElement("article");
+            card.className = "match-card";
+
+            const matched = Array.isArray(match.matched_skills) ? match.matched_skills : [];
+            const missing = Array.isArray(match.missing_skills) ? match.missing_skills : [];
+
+            const matchedHtml = matched
+                .map((skill) => `<span class="pill ok">${escapeHtml(skill)}</span>`)
+                .join("");
+            const missingHtml = missing
+                .map((skill) => `<span class="pill miss">${escapeHtml(skill)}</span>`)
+                .join("");
+
+            card.innerHTML = `
+                <div class="match-head">
+                    <strong>${escapeHtml(match.company_name || "Unknown company")}</strong>
+                    <span class="score">${Number(match.match_score || 0).toFixed(1)}%</span>
+                </div>
+                <p>${escapeHtml(match.description || "No description available.")}</p>
+                <div class="pills">${matchedHtml}${missingHtml}</div>
+            `;
+            matchGrid.appendChild(card);
+        });
     }
 
     function renderMissingGuidance(entities) {
@@ -146,5 +175,14 @@ document.addEventListener("DOMContentLoaded", () => {
         status.textContent = "";
         status.classList.add("hidden");
         status.classList.remove("warning");
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
 });

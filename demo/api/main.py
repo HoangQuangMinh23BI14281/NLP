@@ -20,12 +20,30 @@ app = FastAPI(
 # Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
-# Default to CRF model as requested
-MODEL_PATH = os.path.join(BASE_DIR, "backend", "debug_model_CRF_download")
-# OR if you want to switch to Base_CE:
-# MODEL_PATH = os.path.join(BASE_DIR, "backend", "debug_model_Base_CE_download")
+# Model resolution:
+# 1) DEMO_MODEL_PATH env var (if set)
+# 2) New default CRF model folder
+# 3) Legacy fallback folder names
+def resolve_model_path() -> str:
+    env_model_path = os.getenv("DEMO_MODEL_PATH")
+    if env_model_path:
+        return env_model_path
 
-ARCH_TYPE = "CRF" # or "Base_CE"
+    candidates = [
+        os.path.join(BASE_DIR, "backend", "bert-base-cased_CRF"),
+        os.path.join(BASE_DIR, "backend", "debug_model_CRF_download"),
+        os.path.join(BASE_DIR, "backend", "debug_model_Base_CE_download"),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+
+    # Keep first candidate for clear error/warning message if nothing exists.
+    return candidates[0]
+
+
+MODEL_PATH = resolve_model_path()
+ARCH_TYPE = os.getenv("DEMO_ARCH_TYPE") or ("CRF" if "CRF" in os.path.basename(MODEL_PATH) else "Base_CE")
 
 if not os.path.exists(MODEL_PATH):
     print(f"Warning: Model path {MODEL_PATH} not found. Ensure models are downloaded.")

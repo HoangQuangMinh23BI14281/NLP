@@ -17,8 +17,8 @@
                 <p class="badge">NLP Demo</p>
                 <p class="status-dot"><span></span>System Ready</p>
             </div>
-            <h1>IT Job Description NER</h1>
-            <p class="subtitle">Extract ROLE, SKILL, LOC, EXP, and SALARY from free text with a clean review-friendly output.</p>
+            <h1>AI Job Matching Demo</h1>
+            <p class="subtitle">Extract entities and show which companies match best with the provided profile or job text.</p>
         </header>
 
         <section class="workspace-grid">
@@ -27,7 +27,7 @@
                 <label class="field-wrap" for="input-text">Job Description or Candidate Text</label>
                 <textarea id="input-text" rows="8" placeholder="We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month."></textarea>
                 <div class="actions">
-                    <button id="analyze-btn" type="button">Analyze NER</button>
+                    <button id="analyze-btn" type="button">Analyze Matching</button>
                 </div>
                 <p id="status" class="status hidden"></p>
             </section>
@@ -41,12 +41,12 @@
                     <li>Labels: <code>/labels</code></li>
                     <li>Matching: <code>/match</code></li>
                 </ul>
-                <p>Use the input box to run NER extraction and review entities with token-level tags.</p>
+                <p>Use the input box to run matching and review ranked company suggestions.</p>
             </aside>
         </section>
 
         <section id="result-card" class="card panel hidden">
-            <h2>Extraction Result</h2>
+            <h2>Matching Result</h2>
 
             <div id="missing-box" class="missing-box hidden">
                 <h3>Add More Information</h3>
@@ -57,25 +57,14 @@
             <h3>Entities</h3>
             <div id="entity-list" class="entity-list"></div>
 
-            <h3>Token Preview</h3>
-            <div class="token-table-wrap">
-                <table class="token-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Token</th>
-                            <th>Tag</th>
-                        </tr>
-                    </thead>
-                    <tbody id="token-table-body"></tbody>
-                </table>
-            </div>
+            <h3>Top Company Matches</h3>
+            <div id="match-grid" class="match-grid"></div>
         </section>
     </main>
 
     <div id="loader" class="loader hidden">
         <div class="spinner"></div>
-        <p>Running NER model...</p>
+        <p>Finding best company matches...</p>
     </div>
 
     <script src="/static/script.js"></script>

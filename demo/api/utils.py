@@ -7,6 +7,14 @@ def get_entities(tokens, tags, token_scores):
     current_entity = None
 
     for idx, (token, tag, score) in enumerate(zip(tokens, tags, token_scores)):
+        if tag == "O":
+            if current_entity:
+                current_entity["score"] = round(sum(current_entity["_scores"]) / len(current_entity["_scores"]), 4)
+                del current_entity["_scores"]
+                entities.append(current_entity)
+            current_entity = None
+            continue
+
         if tag.startswith("B-"):
             if current_entity:
                 current_entity["score"] = round(sum(current_entity["_scores"]) / len(current_entity["_scores"]), 4)
@@ -24,6 +32,20 @@ def get_entities(tokens, tags, token_scores):
             current_entity["text"] += " " + token
             current_entity["end_idx"] = idx
             current_entity["_scores"].append(float(score))
+        elif "-" not in tag:
+            # Some checkpoints emit plain entity tags (e.g., LOC) instead of BIO tags.
+            if current_entity:
+                current_entity["score"] = round(sum(current_entity["_scores"]) / len(current_entity["_scores"]), 4)
+                del current_entity["_scores"]
+                entities.append(current_entity)
+
+            current_entity = {
+                "type": tag,
+                "text": token,
+                "start_idx": idx,
+                "end_idx": idx,
+                "_scores": [float(score)],
+            }
         else:
             if current_entity:
                 current_entity["score"] = round(sum(current_entity["_scores"]) / len(current_entity["_scores"]), 4)

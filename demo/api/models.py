@@ -10,8 +10,11 @@ class TransformerCRF(nn.Module):
         self.use_focal_loss = use_focal_loss
         self.gamma = gamma
         self.config = AutoConfig.from_pretrained(model_name_or_path)
-        # Load transformer from config to avoid searching for weights in folder
-        self.transformer = AutoModel.from_config(self.config)
+        # Prefer pretrained backbone weights from model folder when available.
+        try:
+            self.transformer = AutoModel.from_pretrained(model_name_or_path, config=self.config)
+        except Exception:
+            self.transformer = AutoModel.from_config(self.config)
         self.classifier = nn.Linear(self.config.hidden_size, num_labels)
         self.crf = CRF(num_tags=num_labels, batch_first=True)
 
