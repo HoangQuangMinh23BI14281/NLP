@@ -650,16 +650,48 @@ The narrow performance gap between the top variants (CE + Dice, Base CE, CRF) un
 More sophisticated losses and decoding strategies contribute only marginal gains, and in the case of Focal Loss, degrade performance.
 These findings suggest that the NER task at hand exhibits characteristics favorable to standard approaches: relatively balanced class distribution, clean label sequences, and sufficient model capacity in DistilBERT to capture linguistic patterns without special handling of imbalance or sequence constraints.
 
+
 \subsection{Model Comparison and Discussion}
 
-Across the three Transformer backbones, the overall ranking is consistent: hybrid \textbf{CE + Dice Loss} provides the best or near-best performance, standard \textbf{Base CE} remains a very strong baseline, \textbf{CRF} offers competitive sequence-level benefits, while \textbf{Focal Loss} consistently underperforms.
+\subsubsection{Cross-Architecture Performance Comparison}
 
-Among all evaluated models, the best configuration is \textbf{RoBERTa + CE + Dice Loss}, which achieves the highest overall F1-score of \textbf{0.9223}. It is followed very closely by \textbf{RoBERTa + CRF} ($F1 = 0.9220$) and \textbf{BERT + CE + Dice Loss} ($F1 = 0.9202$). DistilBERT, although lighter and faster, remains competitive, with its best variant (\textbf{CE + Dice Loss}) reaching \textbf{0.9109} F1.
+\begin{table}[htbp]
+    \centering
+    \caption{Best Performing Variants: BERT, RoBERTa, and DistilBERT Comparison.}
+    \begin{tabular}{l c c c c c c}
+        \hline
+        \textbf{Model} & \textbf{Loss Function} & \textbf{Parameters} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall} & \textbf{Accuracy} \\
+        \hline
+        RoBERTa-base & CE + Dice Loss & 125M & \textbf{0.9223} & \textbf{0.9215} & \textbf{0.9231} & \textbf{0.9772} \\
+        RoBERTa-base & CRF & 125M & 0.9220 & 0.9195 & 0.9246 & 0.9772 \\
+        BERT-base & CE + Dice Loss & 110M & 0.9202 & 0.9183 & 0.9222 & 0.9759 \\
+        BERT-base & Base CE & 110M & 0.9172 & 0.9140 & 0.9204 & 0.9755 \\
+        DistilBERT-base & CE + Dice Loss & 66M & 0.9109 & 0.9066 & 0.9152 & 0.9746 \\
+        DistilBERT-base & Base CE & 66M & 0.9095 & 0.9046 & 0.9145 & 0.9744 \\
+        \hline
+    \end{tabular}
+    \label{tab:cross_model_comparison}
+\end{table}
 
-These results reveal a clear trade-off between model capacity and efficiency. RoBERTa delivers the best extraction quality, likely due to stronger pre-training and richer contextual representations. BERT remains highly competitive and stable across all strong objectives. DistilBERT sacrifices some performance in exchange for lower computational cost, but still maintains solid entity extraction ability.
+\paragraph{Key Findings}
 
-Another important finding is the repeated failure of \textbf{Focal Loss} across all backbones. Despite often producing low numerical validation loss, it consistently yields the weakest F1-score, mainly because it harms precision and increases false positive entity predictions. This suggests that the current dataset does not require aggressive hard-example reweighting, and that such reweighting can distort the balance between precision and recall.
+\textbf{Best Configuration:} RoBERTa-base + CE + Dice Loss achieves the highest F1-score (0.9223) with balanced precision and recall.
 
-By contrast, the combination of \textbf{Cross-Entropy and Dice Loss} proves highly effective across all architectures. This hybrid objective leverages the stability of token-level supervision while directly encouraging overlap between predicted and gold entities, resulting in consistently strong and well-balanced performance.
+\textbf{Performance Hierarchy:} RoBERTa (125M) $\to$ BERT (110M, -0.0021 F1) $\to$ DistilBERT (66M, -0.0093 F1). Despite 47\% fewer parameters, DistilBERT remains competitive, making it ideal for resource-constrained deployment.
 
-Overall, the experiments demonstrate that \textbf{RoBERTa + CE + Dice Loss} is the most effective model for our job-description information extraction task. At the same time, the narrow differences among the top-performing CE-based and CRF-based variants suggest that the dataset is relatively clean and structurally learnable, allowing modern Transformer encoders to perform strongly even without heavily specialized decoding strategies.
+\textbf{Loss Function Consistency:} CE + Dice Loss outperforms alternatives across all architectures, while Focal Loss consistently underperforms (-6--7\% F1), indicating the findings are architecture-agnostic.
+
+\textbf{Precision-Recall Balance:} CE + Dice achieves the most balanced profiles, with a slight recall bias (0.004--0.0049 F1 points higher than precision) beneficial for NER applications.
+
+\paragraph{Recommendations}
+
+\begin{itemize}
+    \item \textbf{Maximum Accuracy:} RoBERTa-base + CE + Dice (F1 = 0.9223)
+    \item \textbf{Production (Best Trade-off):} BERT-base + CE + Dice (F1 = 0.9202, 12\% fewer parameters)
+    \item \textbf{Edge/Latency-Critical:} DistilBERT-base + CE + Dice (F1 = 0.9109, 47\% parameter reduction)
+    \item \textbf{Loss Function:} Always use CE + Dice Loss; avoid Focal Loss for balanced NER datasets
+\end{itemize}
+
+\paragraph{Conclusion}
+
+RoBERTa + CE + Dice Loss is the best-performing configuration (F1 = 0.9223). However, minimal performance gaps among top variants suggest that architecture choice should prioritize deployment constraints (latency, memory, cost) over marginal accuracy differences.
