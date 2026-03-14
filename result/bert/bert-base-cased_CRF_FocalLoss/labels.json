@@ -1,1 +1,0 @@
-{"id2label": {"0": "B-EXP", "1": "B-LOC", "2": "B-ROLE", "3": "B-SALARY", "4": "B-SKILL", "5": "I-EXP", "6": "I-LOC", "7": "I-ROLE", "8": "I-SALARY", "9": "I-SKILL", "10": "LOC", "11": "O"}, "label2id": {"B-EXP": 0, "B-LOC": 1, "B-ROLE": 2, "B-SALARY": 3, "B-SKILL": 4, "I-EXP": 5, "I-LOC": 6, "I-ROLE": 7, "I-SALARY": 8, "I-SKILL": 9, "LOC": 10, "O": 11}}

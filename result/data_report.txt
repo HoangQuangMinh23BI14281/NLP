@@ -1,8 +1,0 @@
-
-        Max sequence length: 103
-        Mean sequence length: 21.63
-
-        --- DATA QUALITY REPORT ---
-        Total IOB formatting errors detected: 0
-        STATUS: IOB format is strictly valid.
----------------------------
