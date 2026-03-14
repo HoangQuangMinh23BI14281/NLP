@@ -1,1 +1,22 @@
 \section{Introduction}
+
+The rapid growth of online recruitment platforms has created a large volume of unstructured job description (JD) text. Although these postings contain valuable information such as required skills, salary range, location, experience level, and job role, this information is often embedded in free-form natural language with inconsistent formatting. As a result, manually reading and standardizing job postings is time-consuming for both applicants and recruitment systems. In practical applications such as job recommendation, resume matching, labor market analysis, and automated recruitment pipelines, the ability to convert raw JD text into structured information is therefore highly valuable.
+
+Named Entity Recognition (NER) is a core Natural Language Processing (NLP) task designed to identify and classify meaningful spans in text into predefined categories. In the context of recruitment, NER can be used to transform noisy, heterogeneous job postings into machine-readable fields. However, this task remains challenging because recruitment text is highly diverse: employers use different writing styles, abbreviations, incomplete sentences, and domain-specific terminology. In addition, several important entities, such as salary expressions or experience requirements, may appear in multiple surface forms, making rule-based extraction brittle and difficult to maintain.
+
+In this project, we study the problem of \textit{information extraction from job descriptions} using Transformer-based NER models. Our goal is to automatically identify five key entity types that are central to downstream recruitment applications: \textbf{ROLE}, \textbf{SKILL}, \textbf{LOC}, \textbf{EXP}, and \textbf{SALARY}. Rather than relying on handcrafted patterns alone, we investigate whether pre-trained language models can learn robust contextual representations for this task and generalize across varied job-posting styles. To this end, we fine-tune multiple Transformer backbones, including BERT, DistilBERT, and RoBERTa, and compare several training objectives and decoding strategies.
+
+The main motivation of this work is twofold. First, structured extraction from JDs can significantly improve the quality of recruitment-related systems by enabling better search, filtering, and recommendation. Second, the project provides a concrete benchmark for analyzing how different architectures and loss formulations behave on a domain-specific NER dataset. In particular, we examine whether techniques designed to address class imbalance and sequence consistency, such as Focal Loss, Dice Loss, and Conditional Random Fields (CRF), can improve extraction performance beyond a standard cross-entropy baseline.
+
+To support this study, we construct a custom dataset in JSONL format with token-level annotations following the IOB-style labeling scheme. The dataset covers diverse technical domains and writing styles to better reflect the variability found in real-world job advertisements. We then design an experimental pipeline for tokenization, label alignment, training, and evaluation using standard entity-level metrics such as precision, recall, and F1-score.
+
+The main contributions of this project can be summarized as follows:
+
+\begin{itemize}
+	\item We formulate job-description information extraction as a Transformer-based NER task over five recruitment-oriented entity types: ROLE, SKILL, LOC, EXP, and SALARY.
+	\item We build and preprocess a custom annotated dataset designed for structured extraction from heterogeneous JD text.
+	\item We compare several pre-trained Transformer backbones together with multiple loss functions and decoding strategies, including Cross-Entropy, Focal Loss, Dice Loss, combined objectives, and CRF-based sequence modeling.
+	\item We provide an empirical analysis of model behavior and discuss the trade-offs between performance, robustness, and practical deployment considerations.
+\end{itemize}
+
+The remainder of this report is organized as follows. Section 2 describes the dataset collection and preparation process. Section 3 presents the proposed methodology, including model architectures, token-label alignment, and training objectives. Section 4 reports the experimental setup and comparative results across model variants. Finally, Section 5 concludes the report with limitations and possible directions for future work.
