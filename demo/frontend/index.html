@@ -13,19 +13,36 @@
     <div class="page-bg"></div>
     <main class="container">
         <header class="hero">
-            <p class="badge">NLP Demo</p>
+            <div class="hero-top">
+                <p class="badge">NLP Demo</p>
+                <p class="status-dot"><span></span>System Ready</p>
+            </div>
             <h1>IT Job Description NER</h1>
-            <p class="subtitle">Paste free text and extract ROLE, SKILL, LOC, EXP, and SALARY entities.</p>
+            <p class="subtitle">Extract ROLE, SKILL, LOC, EXP, and SALARY from free text with a clean review-friendly output.</p>
         </header>
 
-        <section class="card panel">
-            <h2>Input Text</h2>
-            <label class="field-wrap" for="input-text">Job Description or Candidate Text</label>
-            <textarea id="input-text" rows="8" placeholder="We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month."></textarea>
-            <div class="actions">
-                <button id="analyze-btn" type="button">Analyze NER</button>
-            </div>
-            <p id="status" class="status hidden"></p>
+        <section class="workspace-grid">
+            <section class="card panel input-panel">
+                <h2>Input Text</h2>
+                <label class="field-wrap" for="input-text">Job Description or Candidate Text</label>
+                <textarea id="input-text" rows="8" placeholder="We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month."></textarea>
+                <div class="actions">
+                    <button id="analyze-btn" type="button">Analyze NER</button>
+                </div>
+                <p id="status" class="status hidden"></p>
+            </section>
+
+            <aside class="card panel info-panel">
+                <h3>Demo API</h3>
+                <ul>
+                    <li>Frontend: <code>/</code></li>
+                    <li>Swagger: <code>/docs</code></li>
+                    <li>Health: <code>/health</code></li>
+                    <li>Labels: <code>/labels</code></li>
+                    <li>Matching: <code>/match</code></li>
+                </ul>
+                <p>Use the input box to run NER extraction and review entities with token-level tags.</p>
+            </aside>
         </section>
 
         <section id="result-card" class="card panel hidden">
@@ -53,15 +70,6 @@
                     <tbody id="token-table-body"></tbody>
                 </table>
             </div>
-        </section>
-
-        <section class="card todo-panel">
-            <h3>TODO / Missing In Current demo/api</h3>
-            <ul>
-                <li>Matching endpoint exists at <code>/match</code>, but UI still displays NER-only view.</li>
-                <li>PDF upload and parser endpoint are not implemented yet.</li>
-                <li>Entity confidence is estimated from token logits; CRF-calibrated confidence can be improved later.</li>
-            </ul>
         </section>
     </main>
 

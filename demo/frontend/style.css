@@ -41,8 +41,16 @@ body {
 }
 
 .hero {
-    text-align: center;
+    text-align: left;
     margin-bottom: 1rem;
+}
+
+.hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin-bottom: 0.2rem;
 }
 
 .badge {
@@ -58,6 +66,24 @@ body {
     text-transform: uppercase;
 }
 
+.status-dot {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1d5e42;
+}
+
+.status-dot span {
+    width: 0.52rem;
+    height: 0.52rem;
+    border-radius: 50%;
+    background: #2ca46a;
+    box-shadow: 0 0 0 5px rgba(44, 164, 106, 0.16);
+}
+
 .hero h1 {
     margin: 0.8rem 0 0.3rem;
     font-size: clamp(1.8rem, 2.8vw, 2.8rem);
@@ -66,6 +92,14 @@ body {
 .subtitle {
     color: var(--muted);
     margin: 0;
+}
+
+.workspace-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 0.95rem;
+    align-items: start;
+    margin-bottom: 0.95rem;
 }
 
 .card {
@@ -77,7 +111,36 @@ body {
 
 .panel {
     padding: 1rem 1.1rem;
-    margin-bottom: 0.95rem;
+}
+
+.input-panel {
+    margin-bottom: 0;
+}
+
+.info-panel {
+    margin-bottom: 0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+}
+
+.info-panel h3 {
+    margin: 0 0 0.45rem;
+    font-size: 1.02rem;
+}
+
+.info-panel ul {
+    margin: 0 0 0.75rem;
+    padding-left: 1rem;
+    color: #294454;
+}
+
+.info-panel li {
+    margin-bottom: 0.24rem;
+}
+
+.info-panel p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
 }
 
 .panel h2 {
@@ -230,22 +293,6 @@ button:hover {
     background: #f8fbfd;
 }
 
-.todo-panel {
-    padding: 0.85rem 1rem;
-    border-style: dashed;
-}
-
-.todo-panel h3 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-.todo-panel ul {
-    margin: 0;
-    padding-left: 1rem;
-    color: #5d6d7a;
-}
-
 .loader {
     position: fixed;
     inset: 0;
@@ -282,8 +329,19 @@ button:hover {
         margin-top: 1rem;
     }
 
-    .panel,
-    .todo-panel {
+    .hero {
+        text-align: center;
+    }
+
+    .hero-top {
+        justify-content: center;
+    }
+
+    .workspace-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel {
         padding: 0.85rem;
     }
 }

@@ -14,9 +14,3 @@ Endpoints:
 Sample test text:
 
 `We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month.`
-
-TODO (not implemented in current demo/api):
-
-- PDF upload parsing pipeline.
-- Frontend still uses `/predict`; integrate `/match` view if you want company ranking cards.
-- Confidence score is currently estimated from token logits; sequence-level CRF confidence is a possible future enhancement.
