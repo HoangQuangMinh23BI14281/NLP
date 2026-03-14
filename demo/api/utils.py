@@ -1,4 +1,5 @@
 import torch
+import math
 
 
 def get_entities(tokens, tags, token_scores):
@@ -79,12 +80,31 @@ class NERInference:
             outputs = self.model(**inputs)
 
         logits = outputs["logits"] if isinstance(outputs, dict) and "logits" in outputs else outputs.logits
-        probs = torch.softmax(logits, dim=-1)[0]
+        is_crf_output = isinstance(outputs, dict) and "decoded_tags" in outputs
+        # CRF emission logits are often over-confident, so soften them for display confidence.
+        temperature = 2.5 if is_crf_output else 1.0
+        probs = torch.softmax(logits / temperature, dim=-1)[0]
         
         if "decoded_tags" in outputs:
             pred_ids = outputs["decoded_tags"][0]
         else:
             pred_ids = torch.argmax(logits, dim=2)[0].cpu().numpy().tolist()
+
+        def token_confidence(prob_vector: torch.Tensor, label_id: int) -> float:
+            top_values = torch.topk(prob_vector, k=min(2, prob_vector.shape[0])).values
+            top1 = top_values[0]
+            top2 = top_values[1] if top_values.shape[0] > 1 else torch.tensor(0.0, device=prob_vector.device)
+            margin = torch.clamp(top1 - top2, min=0.0, max=1.0)
+
+            entropy = -(prob_vector * torch.log(prob_vector + 1e-12)).sum()
+            max_entropy = math.log(prob_vector.shape[0]) if prob_vector.shape[0] > 1 else 1.0
+            entropy_conf = 1.0 - (entropy / max_entropy)
+
+            label_prob = prob_vector[label_id]
+
+            # Blend probability, margin, and entropy to get a less inflated confidence signal.
+            confidence = (0.5 * label_prob) + (0.25 * margin) + (0.25 * entropy_conf)
+            return float(torch.clamp(confidence, min=0.0, max=1.0).item())
             
         # Group subwords into words
         tokens = self.tokenizer.convert_ids_to_tokens(inputs["input_ids"][0])
@@ -105,7 +125,7 @@ class NERInference:
                 final_tokens.append(token)
                 label_id = pred_ids[i]
                 final_labels.append(self.id2label[str(label_id)] if str(label_id) in self.id2label else self.id2label[label_id])
-                final_scores.append(float(probs[i, label_id].item()))
+                final_scores.append(token_confidence(probs[i], label_id))
             else:
                 # It's a subword of the same word (e.g., ##per)
                 # Append to the last token and skip its label

@@ -21,28 +21,14 @@
             <p class="subtitle">Extract entities and show which companies match best with the provided profile or job text.</p>
         </header>
 
-        <section class="workspace-grid">
-            <section class="card panel input-panel">
-                <h2>Input Text</h2>
-                <label class="field-wrap" for="input-text">Job Description or Candidate Text</label>
-                <textarea id="input-text" rows="8" placeholder="We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month."></textarea>
-                <div class="actions">
-                    <button id="analyze-btn" type="button">Analyze Matching</button>
-                </div>
-                <p id="status" class="status hidden"></p>
-            </section>
-
-            <aside class="card panel info-panel">
-                <h3>Demo API</h3>
-                <ul>
-                    <li>Frontend: <code>/</code></li>
-                    <li>Swagger: <code>/docs</code></li>
-                    <li>Health: <code>/health</code></li>
-                    <li>Labels: <code>/labels</code></li>
-                    <li>Matching: <code>/match</code></li>
-                </ul>
-                <p>Use the input box to run matching and review ranked company suggestions.</p>
-            </aside>
+        <section class="card panel input-panel">
+            <h2>Input Text</h2>
+            <label class="field-wrap" for="input-text">Job Description or Candidate Text</label>
+            <textarea id="input-text" rows="8" placeholder="We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month."></textarea>
+            <div class="actions">
+                <button id="analyze-btn" type="button">Analyze Matching</button>
+            </div>
+            <p id="status" class="status hidden"></p>
         </section>
 
         <section id="result-card" class="card panel hidden">
@@ -56,6 +42,9 @@
 
             <h3>Entities</h3>
             <div id="entity-list" class="entity-list"></div>
+
+            <h3>Skill Coverage Across Companies</h3>
+            <div id="skill-coverage" class="skill-coverage"></div>
 
             <h3>Top Company Matches</h3>
             <div id="match-grid" class="match-grid"></div>

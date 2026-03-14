@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const resultCard = document.getElementById("result-card");
     const entityList = document.getElementById("entity-list");
+    const skillCoverage = document.getElementById("skill-coverage");
     const matchGrid = document.getElementById("match-grid");
 
     const missingBox = document.getElementById("missing-box");
@@ -74,8 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderResults(data) {
         const entities = Array.isArray(data.candidate_entities) ? data.candidate_entities : [];
         const matches = Array.isArray(data.matches) ? data.matches : [];
+        const coverage = Array.isArray(data.skill_coverage) ? data.skill_coverage : [];
 
         entityList.innerHTML = "";
+        skillCoverage.innerHTML = "";
         matchGrid.innerHTML = "";
         missingList.innerHTML = "";
         missingBox.classList.add("hidden");
@@ -95,7 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        renderMatches(matches);
+    renderSkillCoverage(coverage);
+    renderMatches(matches);
 
         renderMissingGuidance(entities);
         resultCard.classList.remove("hidden");
@@ -130,10 +134,38 @@ document.addEventListener("DOMContentLoaded", () => {
                     <strong>${escapeHtml(match.company_name || "Unknown company")}</strong>
                     <span class="score">${Number(match.match_score || 0).toFixed(1)}%</span>
                 </div>
+                <p class="skill-ratio">Matched skills: ${Number(match.matched_skill_count || 0)}/${Number(match.required_skill_count || 0)}</p>
                 <p>${escapeHtml(match.description || "No description available.")}</p>
                 <div class="pills">${matchedHtml}${missingHtml}</div>
             `;
             matchGrid.appendChild(card);
+        });
+    }
+
+    function renderSkillCoverage(coverage) {
+        if (coverage.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "status warning";
+            empty.textContent = "No detected skills available to compare across companies.";
+            skillCoverage.appendChild(empty);
+            return;
+        }
+
+        coverage.forEach((item) => {
+            const row = document.createElement("article");
+            row.className = "coverage-item";
+            const count = Number(item.match_count || 0);
+            const total = Number(item.total_companies || 0);
+            const ratio = total > 0 ? (count / total) * 100 : 0;
+
+            row.innerHTML = `
+                <div class="coverage-head">
+                    <strong>${escapeHtml(item.skill || "unknown")}</strong>
+                    <span>${count}/${total} companies</span>
+                </div>
+                <div class="coverage-bar"><span style="width:${ratio.toFixed(1)}%"></span></div>
+            `;
+            skillCoverage.appendChild(row);
         });
     }
 

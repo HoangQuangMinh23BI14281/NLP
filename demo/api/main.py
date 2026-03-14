@@ -1,5 +1,6 @@
 import os
-from typing import Any, Dict, List
+import re
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,6 +80,7 @@ class PredictResponse(BaseModel):
 class MatchResponse(BaseModel):
     candidate_entities: List[Dict[str, Any]]
     matches: List[Dict[str, Any]]
+    skill_coverage: List[Dict[str, Any]]
 
 @app.on_event("startup")
 async def startup_event():
@@ -134,36 +136,135 @@ async def match(request: PredictRequest):
         result = inference_engine.predict(request.text)
         entities = result.get("entities", [])
 
-        candidate_skills = [e["text"].lower().strip() for e in entities if e.get("type") == "SKILL"]
-        candidate_roles = [e["text"].lower().strip() for e in entities if e.get("type") == "ROLE"]
-        candidate_locs = [e["text"].lower().strip() for e in entities if e.get("type") == "LOC"]
-        candidate_exps = [e["text"].lower().strip() for e in entities if e.get("type") == "EXP"]
+        def normalize_text(value: str) -> str:
+            cleaned = re.sub(r"[^a-z0-9\s+]", " ", value.lower())
+            return " ".join(cleaned.split())
+
+        def dedupe(values: List[str]) -> List[str]:
+            seen = set()
+            output: List[str] = []
+            for value in values:
+                if value and value not in seen:
+                    seen.add(value)
+                    output.append(value)
+            return output
+
+        def phrase_match(candidate: str, required: str) -> bool:
+            candidate_norm = normalize_text(candidate)
+            required_norm = normalize_text(required)
+            if not candidate_norm or not required_norm:
+                return False
+
+            if candidate_norm == required_norm:
+                return True
+
+            candidate_tokens = set(candidate_norm.split())
+            required_tokens = set(required_norm.split())
+            if not candidate_tokens or not required_tokens:
+                return False
+
+            # For single-token requirements, avoid fuzzy partial matches.
+            if len(required_tokens) == 1:
+                return list(required_tokens)[0] in candidate_tokens
+
+            # Prefer phrase containment for multi-token requirements.
+            if required_norm in candidate_norm or candidate_norm in required_norm:
+                return True
+
+            overlap = len(candidate_tokens & required_tokens) / len(required_tokens)
+            return overlap >= 0.8
+
+        def binary_score(required_values: List[str], candidate_values: List[str]) -> Optional[float]:
+            if not required_values:
+                return None
+            matched = any(
+                phrase_match(candidate, required)
+                for required in required_values
+                for candidate in candidate_values
+            )
+            return 100.0 if matched else 0.0
+
+        candidate_skills_filtered = dedupe(
+            [
+                normalize_text(e["text"])
+                for e in entities
+                if e.get("type") == "SKILL" and float(e.get("score", 0.0)) >= 0.45
+            ]
+        )
+        # Fallback for models that do not produce useful confidence values.
+        candidate_skills_raw = dedupe([normalize_text(e["text"]) for e in entities if e.get("type") == "SKILL"])
+        candidate_skills = candidate_skills_filtered if candidate_skills_filtered else candidate_skills_raw
+
+        candidate_roles = dedupe([normalize_text(e["text"]) for e in entities if e.get("type") == "ROLE"])
+        candidate_locs = dedupe([normalize_text(e["text"]) for e in entities if e.get("type") == "LOC"])
+        candidate_exps = dedupe([normalize_text(e["text"]) for e in entities if e.get("type") == "EXP"])
 
         matches: List[Dict[str, Any]] = []
+        skill_coverage: List[Dict[str, Any]] = []
+
+        for skill in candidate_skills:
+            matched_companies = []
+            for company in COMPANIES:
+                req_skills = dedupe([normalize_text(s) for s in company["requirements"].get("SKILL", [])])
+                if any(phrase_match(skill, req_skill) for req_skill in req_skills):
+                    matched_companies.append(company["name"])
+
+            skill_coverage.append(
+                {
+                    "skill": skill,
+                    "matched_companies": matched_companies,
+                    "match_count": len(matched_companies),
+                    "total_companies": len(COMPANIES),
+                }
+            )
+
+        skill_coverage.sort(key=lambda item: (-item["match_count"], item["skill"]))
 
         for company in COMPANIES:
-            req_skills = [s.lower() for s in company["requirements"].get("SKILL", [])]
-            req_roles = [r.lower() for r in company["requirements"].get("ROLE", [])]
-            req_locs = [l.lower() for l in company["requirements"].get("LOC", [])]
-            req_exps = [x.lower() for x in company["requirements"].get("EXP", [])]
+            req_skills = dedupe([normalize_text(s) for s in company["requirements"].get("SKILL", [])])
+            req_roles = dedupe([normalize_text(r) for r in company["requirements"].get("ROLE", [])])
+            req_locs = dedupe([normalize_text(l) for l in company["requirements"].get("LOC", [])])
+            req_exps = dedupe([normalize_text(x) for x in company["requirements"].get("EXP", [])])
 
-            matched_skills = [s for s in candidate_skills if any(rs in s or s in rs for rs in req_skills)]
-            skill_score = (len(matched_skills) / len(req_skills)) * 100 if req_skills else 100
+            matched_required_skills = [
+                req_skill for req_skill in req_skills
+                if any(phrase_match(candidate_skill, req_skill) for candidate_skill in candidate_skills)
+            ]
 
-            role_match = any(any(rr in cr or cr in rr for rr in req_roles) for cr in candidate_roles)
-            role_score = 100 if role_match else 0
+            matched_candidate_skills = [
+                candidate_skill for candidate_skill in candidate_skills
+                if any(phrase_match(candidate_skill, req_skill) for req_skill in req_skills)
+            ]
 
-            loc_match = any(any(rl in cl or cl in rl for rl in req_locs) for cl in candidate_locs)
-            loc_score = 100 if loc_match else 0
-            if not req_locs:
-                loc_score = 100
+            skill_score = None
+            if req_skills:
+                skill_recall = len(matched_required_skills) / len(req_skills)
+                skill_precision = len(set(matched_candidate_skills)) / len(candidate_skills) if candidate_skills else 0.0
+                if skill_precision + skill_recall > 0:
+                    skill_f1 = (2 * skill_precision * skill_recall) / (skill_precision + skill_recall)
+                else:
+                    skill_f1 = 0.0
+                skill_score = skill_f1 * 100
 
-            exp_match = any(any(rx in cx or cx in rx for rx in req_exps) for cx in candidate_exps)
-            exp_score = 100 if exp_match else 0
-            if not req_exps:
-                exp_score = 100
+            role_score = binary_score(req_roles, candidate_roles)
+            loc_score = binary_score(req_locs, candidate_locs)
+            exp_score = binary_score(req_exps, candidate_exps)
 
-            overall_score = (skill_score * 0.5) + (role_score * 0.3) + (loc_score * 0.1) + (exp_score * 0.1)
+            weighted_parts = []
+            if skill_score is not None:
+                weighted_parts.append((skill_score, 0.6))
+            if role_score is not None:
+                weighted_parts.append((role_score, 0.25))
+            if loc_score is not None:
+                weighted_parts.append((loc_score, 0.1))
+            if exp_score is not None:
+                weighted_parts.append((exp_score, 0.05))
+
+            if weighted_parts:
+                total_weight = sum(weight for _, weight in weighted_parts)
+                overall_score = sum(score * weight for score, weight in weighted_parts) / total_weight
+            else:
+                overall_score = 0.0
 
             matches.append(
                 {
@@ -171,15 +272,17 @@ async def match(request: PredictRequest):
                     "company_name": company["name"],
                     "description": company["description"],
                     "match_score": round(overall_score, 2),
-                    "matched_skills": sorted(set(matched_skills)),
+                    "matched_skills": sorted(set(matched_required_skills)),
                     "missing_skills": [
-                        s for s in req_skills if not any(s in ms or ms in s for ms in matched_skills)
+                        s for s in req_skills if s not in matched_required_skills
                     ],
+                    "matched_skill_count": len(set(matched_required_skills)),
+                    "required_skill_count": len(req_skills),
                 }
             )
 
         matches.sort(key=lambda item: item["match_score"], reverse=True)
-        return {"candidate_entities": entities, "matches": matches}
+        return {"candidate_entities": entities, "matches": matches, "skill_coverage": skill_coverage}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

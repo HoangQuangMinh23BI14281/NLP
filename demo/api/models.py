@@ -10,11 +10,8 @@ class TransformerCRF(nn.Module):
         self.use_focal_loss = use_focal_loss
         self.gamma = gamma
         self.config = AutoConfig.from_pretrained(model_name_or_path)
-        # Prefer pretrained backbone weights from model folder when available.
-        try:
-            self.transformer = AutoModel.from_pretrained(model_name_or_path, config=self.config)
-        except Exception:
-            self.transformer = AutoModel.from_config(self.config)
+        # Build backbone from config, then load the full CRF wrapper checkpoint once in load_ner_model.
+        self.transformer = AutoModel.from_config(self.config)
         self.classifier = nn.Linear(self.config.hidden_size, num_labels)
         self.crf = CRF(num_tags=num_labels, batch_first=True)
 
@@ -66,7 +63,18 @@ def load_ner_model(model_path, arch_type="Base_CE"):
         
         if os.path.exists(state_dict_path):
             state_dict = torch.load(state_dict_path, map_location="cpu")
-            model.load_state_dict(state_dict, strict=False)
+            missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+
+            # If the checkpoint uses base-model keys (embeddings/encoder/...) instead of
+            # wrapper keys (transformer.embeddings/...), adapt once and retry.
+            if unexpected_keys and all(not k.startswith("transformer.") for k in state_dict.keys()):
+                adapted_state_dict = {}
+                for key, value in state_dict.items():
+                    if key.startswith("classifier.") or key.startswith("crf."):
+                        adapted_state_dict[key] = value
+                    else:
+                        adapted_state_dict[f"transformer.{key}"] = value
+                model.load_state_dict(adapted_state_dict, strict=False)
     else:
         raise ValueError(f"Unknown architecture type: {arch_type}")
     
