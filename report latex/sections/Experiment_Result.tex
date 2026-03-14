@@ -247,7 +247,60 @@ Token accuracy of 97.36\% is marginally lower than pure CRF (97.38\%).
 The empirical results suggest that Focal Loss is counterproductive when combined with CRF. This may be because CRF already captures sequence structure and hard decisions at the sequence level, whereas Focal Loss adds redundant token-level hard example weighting. The two objectives appear to work at cross-purposes: Focal Loss amplifies gradients for difficult tokens, while CRF finds globally optimal sequences, potentially leading to suboptimal joint learning.
 \textbf{Conclusion:} CRF + Focal Loss should not be recommended for this NER task.
 
+\subsubsection{Summary: All DistilBERT Variants.}
 
+\begin{table}[htbp]
+\centering
+\caption{DistilBERT: Final F1-scores Across All Loss Functions (epoch 5).}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Architecture} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall} & \textbf{Accuracy} \\
+\hline
+CE + Dice Loss & \textbf{0.9109} & \textbf{0.9066} & \textbf{0.9152} & \textbf{0.9746} \\
+Base CE & 0.9095 & 0.9046 & 0.9145 & 0.9744 \\
+CRF & 0.9064 & 0.9003 & 0.9126 & 0.9738 \\
+CRF + Focal Loss & 0.9049 & 0.8982 & 0.9117 & 0.9736 \\
+Dice Loss & 0.8911 & 0.8937 & 0.8884 & 0.9685 \\
+Focal Loss & 0.8447 & 0.8063 & 0.8869 & 0.9572 \\
+\hline
+\end{tabular}
+\label{tab:distilbert_summary}
+\end{table}
 
+\paragraph{Overall Performance Ranking.}
+The six DistilBERT variants exhibit a clear hierarchy of performance.
+\textbf{CE + Dice Loss emerges as the top performer} with $F1 = 0.9109$, establishing itself as the optimal choice for this NER task.
+The performance gap between the best and worst variant is substantial: $0.9109 - 0.8447 = 0.0662$ (6.62 percentage points), highlighting the significant impact of loss function design on final performance.
+
+The top three variants (CE + Dice, Base CE, CRF) cluster tightly within 0.0045 F1 points, with all achieving $F1 \geq 0.9064$.
+This suggests that for DistilBERT on this dataset, sophisticated sequence modeling (CRF) and F1-aware losses (Dice) provide only marginal improvements over the simple baseline—a testament to the strong baseline and well-structured nature of the NER task.
+
+In contrast, Focal Loss ($F1 = 0.8447$) and Dice Loss alone ($F1 = 0.8911$) show significantly degraded performance.
+Focal Loss's poor performance ($-6.48\%$ relative to CE + Dice) is particularly noteworthy, as it suggests that class weighting and hard example emphasis are either unnecessary or harmful on a balanced dataset.
+Dice Loss performs moderately ($-1.98\%$ relative to CE + Dice), indicating that while F1-aware optimization is beneficial in isolation, it achieves superior results when combined with cross-entropy rather than used alone.
+
+\paragraph{Precision-Recall Trade-offs.}
+Examining the precision-recall curves reveals important trade-offs:
+
+\begin{itemize}
+\item \textbf{CE + Dice Loss} achieves the best balance ($P = 0.9066$, $R = 0.9152$), with recall slightly exceeding precision, resulting in the highest $F1$.
+\item \textbf{Base CE} and \textbf{CRF} maintain comparable balances ($P \approx 0.9025$, $R \approx 0.9136$), differing only marginally from CE + Dice.
+\item \textbf{Dice Loss alone} exhibits reversed bias ($P = 0.8937$, $R = 0.8884$), where precision exceeds recall, suggesting the Dice objective favors entity detection over boundary accuracy.
+\item \textbf{Focal Loss} severely degrades precision ($P = 0.8063$), indicating it over-emphasizes recall ($R = 0.8869$) at the expense of precision, likely due to aggressive down-weighting of easy examples.
+\item \textbf{CRF + Focal Loss} falls between CRF and Focal Loss in precision ($P = 0.8982$), inheriting some precision loss from Focal Loss despite CRF's structural constraints.
+\end{itemize}
+
+\paragraph{Convergence and Stability.}
+All variants exhibit smooth, monotonic improvement in $F1$ across epochs, with convergence achieved by epoch 3--4.
+\textbf{CE + Dice Loss} demonstrates the most dramatic jump in $F1$ from epoch 1 ($0.8880$) to epoch 2 ($0.9050$), indicating efficient learning from the combined loss signals.
+\textbf{Focal Loss} and \textbf{Dice Loss} show slower convergence and lower epoch-wise $F1$ values throughout training, suggesting these objectives require more careful tuning or are fundamentally misaligned with the task structure.
+
+Validation loss patterns confirm stability: CE + Dice, Base CE, CRF, and CRF + Focal Loss all stabilize after epoch 2 with minimal fluctuation, whereas Focal Loss maintains the lowest absolute validation loss but yields the worst $F1$, indicating a disconnect between loss minimization and metric maximization.
+
+\paragraph{Conclusion.}
+DistilBERT with CE + Dice Loss represents the optimal configuration among the tested variants, achieving state-of-the-art performance on this NER task with $F1 = 0.9109$, precision $= 0.9066$, recall $= 0.9152$, and token accuracy $= 97.46\%$.
+The narrow performance gap between the top variants (CE + Dice, Base CE, CRF) underscores that the baseline is already highly effective, leaving limited room for improvement via advanced techniques.
+More sophisticated losses and decoding strategies contribute only marginal gains, and in the case of Focal Loss, degrade performance.
+These findings suggest that the NER task at hand exhibits characteristics favorable to standard approaches: relatively balanced class distribution, clean label sequences, and sufficient model capacity in DistilBERT to capture linguistic patterns without special handling of imbalance or sequence constraints.
 
 \subsection{Model Comparison and Discussion}
