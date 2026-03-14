@@ -8,7 +8,7 @@ To tackle the NER task, we leverage the power of the Transformer architecture by
 \begin{itemize}
 	\item \textbf{BERT (Bidirectional Encoder Representations from Transformers):} BERT marked a paradigm shift in NLP by capturing deep bidirectional context from unlabelled text.
 	\begin{itemize}
-		\item \textbf{Original Publication:} \textit{"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"} (2018), Google AI.
+		\item \textbf{Original Publication:} \cite{devlin2019bert}.
 		\item \textbf{Architecture:} An Encoder-only Transformer. Standard configurations include $\text{BERT}_{\text{BASE}}$ (12 layers, 768 hidden units, 12 attention heads, $\approx 110\text{M}$ parameters).
 		\item \textbf{Tokenization \& Data:} Utilizes the WordPiece tokenizer ($\approx 30,000$ tokens). Pre-trained on a $16\text{GB}$ dataset consisting of the Toronto BookCorpus and English Wikipedia.
 		\item \textbf{Core Pre-training Strategies:} 
@@ -21,7 +21,7 @@ To tackle the NER task, we leverage the power of the Transformer architecture by
 	\vspace{0.2cm}
 	\item \textbf{DistilBERT (A Distilled Version of BERT):} DistilBERT demonstrates that the size of a large language model can be significantly compressed to accelerate processing speed without severely compromising its contextual understanding capabilities.
 	\begin{itemize}
-		\item \textbf{Original Publication:} \textit{"DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter"} (2019), Hugging Face.
+		\item \textbf{Original Publication:} \cite{sanh2019distilbert}.
 		\item \textbf{Optimized Compression:} DistilBERT retains the general architecture of BERT but removes token-type embeddings and the pooler, while reducing the number of encoder layers from 12 to 6. Consequently, the model is $40\%$ smaller and offers $60\%$ faster inference speed, yet retains approximately $97\%$ of the original model's performance on standard language understanding benchmarks.
 		\item \textbf{Core Training Strategy (Knowledge Distillation):} Rather than proposing a novel architecture, DistilBERT optimizes efficiency through knowledge distillation, where a compact "student" model is trained to reproduce the behavior of a larger "teacher" model (BERT).
 		\begin{itemize}
@@ -38,7 +38,7 @@ To tackle the NER task, we leverage the power of the Transformer architecture by
 	\vspace{0.2cm}
 	\item \textbf{RoBERTa (Robustly Optimized BERT Pretraining Approach):} RoBERTa demonstrates that the original BERT architecture was significantly undertrained and can achieve state-of-the-art performance simply by refining the pre-training methodology.
 	\begin{itemize}
-		\item \textbf{Original Publication:} \textit{"RoBERTa: A Robustly Optimized BERT Pretraining Approach"} (2019), Facebook AI (Meta).
+		\item \textbf{Original Publication:} \cite{liu2019roberta}.
 		\item \textbf{Massive Training Corpora:} Utilizes over $160\text{GB}$ of uncompressed text (approximately $10\times$ more than BERT), incorporating massive datasets such as CC-News, OpenWebText, and Stories.
 		\item \textbf{Tokenization:} Replaces BERT's WordPiece with a Byte-Level Byte Pair Encoding (BPE) algorithm. This expands the vocabulary size to roughly $50,000$ tokens, enhancing the handling of rare and out-of-vocabulary words.
 		\item \textbf{Core Optimization Strategies (Refinement over Revolution):}
