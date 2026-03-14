@@ -1,11 +1,75 @@
 \section{Experiments \& Results}
 
 \subsection{Experimental Setup} % dataset, split, metrics, hyperparams (shared)
+\section{Experiments \& Results}
+
+\subsection{Experimental Setup}
+
+\paragraph{Dataset and Preprocessing.}
+We use a custom NER dataset stored in JSONL format with token-level and tag-level annotations.
+The dataset contains 11,001 training examples, which we split into training and test sets with an 80/20 ratio
+(8,800 training, 2,201 test) using a fixed random seed of 42 for reproducibility.
+
+Each example consists of a sequence of tokens and corresponding NER tags. During preprocessing, we encode
+all unique tags into numeric IDs and compute class weights based on tag frequency in the training set to
+address label imbalance. These weights are used in Focal Loss variants.
+
+Tokenization is performed using model-specific \texttt{AutoTokenizer} with the \texttt{is\_split\_into\_words=True}
+flag to handle word-to-subword alignment. For multi-subword tokens, we assign the label to the first subword
+and mask subsequent subwords with a special ignore index (\texttt{-100}) to exclude them from loss and metric computation.
+
+\paragraph{Training Hyperparameters.}
+We train all models with consistent hyperparameters across architectures:
+\begin{itemize}
+  \item \textbf{Learning rate:} $2 \times 10^{-5}$ (standard for fine-tuning pre-trained Transformers)
+  \item \textbf{Batch size:} 16 (training and evaluation)
+  \item \textbf{Number of epochs:} 5
+  \item \textbf{Weight decay:} 0.01 (L2 regularization)
+  \item \textbf{Evaluation strategy:} per-epoch
+  \item \textbf{Optimizer:} AdamW (default in Hugging Face Trainer)
+\end{itemize}
+
+\paragraph{Loss Functions and Training Objectives.}
+We compare six training objectives:
+
+\begin{enumerate}
+  \item \textbf{Base\_CE (Baseline):} Standard cross-entropy loss applied to token classification logits.
+  
+  \item \textbf{Focal Loss:} Weighted focal loss to handle class imbalance:
+  \begin{equation}
+    \text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t)
+  \end{equation}
+  where $p_t$ is the model probability for the correct class, $\gamma = 2.0$ is the focusing parameter, and $\alpha_t$ is the class weight computed from training tag frequencies.
+  
+  \item \textbf{Dice Loss:} A soft intersection-over-union loss commonly used in segmentation:
+  \begin{equation}
+    \text{DiceLoss} = 1 - \frac{2 \sum_c p_c y_c + \epsilon}{\sum_c p_c + y_c + \epsilon}
+  \end{equation}
+  where $p_c$ and $y_c$ are softmax probabilities and one-hot targets per class, and $\epsilon = 10^{-6}$ is a smoothing constant.
+  
+  \item \textbf{CE + Dice Loss:} A combined loss summing cross-entropy and Dice loss to leverage both.
+  
+  \item \textbf{CRF:} A Conditional Random Field layer replacing softmax decoding to model label transitions explicitly. The CRF learns transition scores between tag pairs and finds the maximum-likelihood sequence during inference.
+  
+  \item \textbf{CRF + Focal Loss:} CRF decoding with sequence-level Focal Loss applied to the CRF negative log-likelihood.
+\end{enumerate}
+
+\paragraph{Evaluation Metrics.}
+We evaluate all models using the \texttt{seqeval} metric, which computes entity-level metrics:
+\begin{itemize}
+  \item \textbf{Precision:} proportion of predicted entities that are correct.
+  \item \textbf{Recall:} proportion of gold entities that are predicted correctly.
+  \item \textbf{F1-Score:} harmonic mean of precision and recall.
+  \item \textbf{Accuracy:} token-level accuracy (including padding/masked tokens).
+\end{itemize}
+Metrics are computed on the test set after each epoch, and we report the final epoch results.
+
 
 \subsection{BERT results}
 
 \subsection{RoBERTa results}
 
 \subsection{DistilBERT results}
+
 
 \subsection{Model Comparison and Discussion}
