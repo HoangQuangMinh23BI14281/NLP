@@ -92,8 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             entities.forEach((entity) => {
                 const pill = document.createElement("span");
                 pill.className = "entity-pill";
-                const score = Number.isFinite(entity.score) ? ` (${(entity.score * 100).toFixed(1)}%)` : "";
-                pill.textContent = `${entity.type}: ${entity.text}${score}`;
+                pill.textContent = `${entity.type}: ${entity.text}`;
                 entityList.appendChild(pill);
             });
         }
