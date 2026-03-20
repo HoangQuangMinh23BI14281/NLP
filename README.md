@@ -129,6 +129,11 @@ The demo does two things:
 We are looking for a Senior Java Developer with 5 years of experience in Spring Boot and AWS, located in Berlin, salary up to $5000/month.
 ```
 
-## License
+## Team members
 
-This repository includes an MIT-style license file at [LICENSE](LICENSE).
+- [Hoang Quang Minh](https://github.com/HoangQuangMinh23BI14281)
+- [Nguyen Quang Minh](https://github.com/quangminh141005)
+- [Nguyen Tuan Dung](https://github.com/tuandung1625)
+- [Nguyen Minh Tuan](https://github.com/Tuan-Nguyen-Minhh)
+- [Nguyen Trong Bach](https://github.com/jecxk)
+- [Pham Nguyen Khoi](https://github.com/pnkkevin)
